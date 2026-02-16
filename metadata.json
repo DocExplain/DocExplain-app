@@ -1,0 +1,7 @@
+{
+  "name": "DocuMate",
+  "description": "AI-powered document assistant that simplifies complex legal jargon into plain English.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

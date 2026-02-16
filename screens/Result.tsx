@@ -1,0 +1,105 @@
+import React from 'react';
+import { AnalysisResult, Screen } from '../types';
+
+interface ResultProps {
+  result: AnalysisResult;
+  onBack: () => void;
+  onDraft: () => void;
+}
+
+export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
+  return (
+    <div className="flex-1 flex flex-col p-4 pb-24 animate-slide-up">
+      <div className="flex items-center bg-white dark:bg-surface-dark rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+        <div className="h-10 w-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center text-red-500 mr-3 shrink-0">
+          <span className="material-symbols-rounded">picture_as_pdf</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate text-gray-900 dark:text-white">{result.fileName}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Processed just now</p>
+        </div>
+        <span className="material-symbols-rounded text-green-500 text-lg">check_circle</span>
+      </div>
+
+      <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
+        <div className="bg-primary/5 dark:bg-primary/10 px-5 py-4 border-b border-primary/10 dark:border-primary/20 flex items-center justify-between">
+          <h2 className="text-primary font-semibold flex items-center gap-2">
+            <span className="material-symbols-rounded text-xl">auto_awesome</span>
+            Plain Language
+          </h2>
+          <div className="flex gap-2">
+            <button className="text-gray-400 hover:text-primary transition-colors">
+              <span className="material-symbols-rounded text-xl">share</span>
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-5 space-y-5">
+          <section>
+            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Summary</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              {result.summary}
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-lg mb-3 text-gray-900 dark:text-white">Key Points</h3>
+            <ul className="space-y-3">
+              {result.keyPoints.map((point, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="material-symbols-rounded text-primary text-[10px] mt-1.5">circle</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{point}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {result.warning && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-100 dark:border-yellow-800/30">
+              <div className="flex items-start gap-2">
+                <span className="material-symbols-rounded text-yellow-600 dark:text-yellow-500 text-lg mt-0.5">warning</span>
+                <p className="text-xs text-yellow-800 dark:text-yellow-200 leading-snug">
+                  <strong>Note:</strong> {result.warning}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 ml-1">Suggested Next Steps</h3>
+        <div className="grid grid-cols-1 gap-3">
+          <button 
+            onClick={onDraft}
+            className="flex items-center p-4 bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-primary dark:hover:border-primary group transition-all"
+          >
+            <div className="h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+              <span className="material-symbols-rounded">edit_note</span>
+            </div>
+            <div className="ml-4 text-left">
+              <p className="font-medium text-gray-900 dark:text-white">Draft a response</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Create an email reply</p>
+            </div>
+            <span className="material-symbols-rounded ml-auto text-gray-300 group-hover:text-primary">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 z-40">
+        <div className="max-w-md mx-auto flex gap-3">
+          <button 
+            onClick={onBack}
+            className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 font-medium py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            Back
+          </button>
+          <button className="flex-1 bg-primary text-white font-medium py-3 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+            <span className="material-symbols-rounded text-sm">chat</span>
+            Ask Follow-up
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

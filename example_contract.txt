@@ -1,0 +1,20 @@
+This is an example legal contract for testing DocuMate.
+
+PARTIES:
+1. The Landlord: Mr. Smith
+2. The Tenant: John Doe
+
+AGREEMENT:
+The Landlord agrees to rent the apartment located at 123 Maple Street to the Tenant for a period of 12 months.
+The monthly rent is $1,500, due on the 1st of each month.
+
+OBLIGATIONS:
+- The Tenant must keep the property clean.
+- The Landlord must provide electricity and water.
+
+SIGNED:
+________________
+Landlord
+
+________________
+Tenant

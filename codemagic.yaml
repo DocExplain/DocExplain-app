@@ -1,0 +1,46 @@
+workflows:
+  ios-workflow:
+    name: iOS Production Build
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      node: 20
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: app
+          include: true
+          source: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+      - name: Build web app
+        script: |
+          npm run build
+      - name: Sync Capacitor
+        script: |
+          npx cap sync ios
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Build IPA for App Store
+        script: |
+          xcode-project build-ipa \
+            --workspace "ios/App/App.xcworkspace" \
+            --scheme "App" \
+            --config "Release"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - *.dsym
+    publishing:
+      email:
+        recipients:
+          - user_email@example.com # You can update this in Codemagic UI
+        notify:
+          success: true
+          failure: true

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnalysisResult } from '../types';
 import { generateDraft } from '../services/aiOrchestrator';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface SmartTemplatesProps {
     result: AnalysisResult;
@@ -24,6 +25,7 @@ const templateMap: Record<ResponsePath, string> = {
 };
 
 export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, onBack }) => {
+    const { t } = useLanguage();
     const [selectedPath, setSelectedPath] = useState<ResponsePath>('extension');
     const [draft, setDraft] = useState('');
     const [loading, setLoading] = useState(false);
@@ -86,7 +88,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, onBack }
 
                 {/* Choose a Response Path */}
                 <div>
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">Choose a Response Path</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.chooseResponse}</h3>
                     <div className="grid grid-cols-2 gap-3">
                         {responsePaths.map((path) => (
                             <button
@@ -129,7 +131,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, onBack }
                     {loading ? (
                         <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center min-h-[200px]">
                             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Generating your response...</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.generating}</p>
                         </div>
                     ) : (
                         <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
@@ -191,13 +193,13 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, onBack }
                         onClick={handlePreviewPDF}
                         className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 font-medium py-3.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
                     >
-                        Preview PDF
+                        {t.previewPdf}
                     </button>
                     <button
                         onClick={handleCopy}
                         className="flex-1 bg-primary text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
                     >
-                        Proceed
+                        {t.copy}
                         <span className="material-symbols-rounded text-lg">arrow_forward</span>
                     </button>
                 </div>

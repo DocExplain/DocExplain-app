@@ -1,5 +1,6 @@
 import React from 'react';
 import { AnalysisResult, Screen } from '../types';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface ResultProps {
   result: AnalysisResult;
@@ -8,6 +9,7 @@ interface ResultProps {
 }
 
 export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
+  const { t } = useLanguage();
   return (
     <div className="flex-1 flex flex-col p-4 pb-24 animate-slide-up">
       <div className="flex items-center bg-white dark:bg-surface-dark rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
@@ -16,7 +18,7 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate text-gray-900 dark:text-white">{result.fileName}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Processed just now</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t.processedNow}</p>
         </div>
         <span className="material-symbols-rounded text-green-500 text-lg">check_circle</span>
       </div>
@@ -25,7 +27,7 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
         <div className="bg-primary/5 dark:bg-primary/10 px-5 py-4 border-b border-primary/10 dark:border-primary/20 flex items-center justify-between">
           <h2 className="text-primary font-semibold flex items-center gap-2">
             <span className="material-symbols-rounded text-xl">auto_awesome</span>
-            Plain Language
+            {t.plainLang}
           </h2>
           <div className="flex gap-2">
             <button className="text-gray-400 hover:text-primary transition-colors">
@@ -33,17 +35,17 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
             </button>
           </div>
         </div>
-        
+
         <div className="p-5 space-y-5">
           <section>
-            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Summary</h3>
+            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">{t.summary}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
               {result.summary}
             </p>
           </section>
 
           <section>
-            <h3 className="font-semibold text-lg mb-3 text-gray-900 dark:text-white">Key Points</h3>
+            <h3 className="font-semibold text-lg mb-3 text-gray-900 dark:text-white">{t.keyPoints}</h3>
             <ul className="space-y-3">
               {result.keyPoints.map((point, i) => (
                 <li key={i} className="flex items-start gap-3">
@@ -59,7 +61,7 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
               <div className="flex items-start gap-2">
                 <span className="material-symbols-rounded text-yellow-600 dark:text-yellow-500 text-lg mt-0.5">warning</span>
                 <p className="text-xs text-yellow-800 dark:text-yellow-200 leading-snug">
-                  <strong>Note:</strong> {result.warning}
+                  <strong>{t.note}:</strong> {result.warning}
                 </p>
               </div>
             </div>
@@ -68,9 +70,9 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 ml-1">Suggested Next Steps</h3>
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 ml-1">{t.nextSteps}</h3>
         <div className="grid grid-cols-1 gap-3">
-          <button 
+          <button
             onClick={onDraft}
             className="flex items-center p-4 bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-primary dark:hover:border-primary group transition-all"
           >
@@ -78,8 +80,8 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
               <span className="material-symbols-rounded">edit_note</span>
             </div>
             <div className="ml-4 text-left">
-              <p className="font-medium text-gray-900 dark:text-white">Draft a response</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Create an email reply</p>
+              <p className="font-medium text-gray-900 dark:text-white">{t.draftResponse}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t.createEmail}</p>
             </div>
             <span className="material-symbols-rounded ml-auto text-gray-300 group-hover:text-primary">chevron_right</span>
           </button>
@@ -88,15 +90,15 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
 
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 z-40">
         <div className="max-w-md mx-auto flex gap-3">
-          <button 
+          <button
             onClick={onBack}
             className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 font-medium py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            Back
+            {t.back}
           </button>
           <button className="flex-1 bg-primary text-white font-medium py-3 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
             <span className="material-symbols-rounded text-sm">chat</span>
-            Ask Follow-up
+            {t.askFollowup}
           </button>
         </div>
       </div>

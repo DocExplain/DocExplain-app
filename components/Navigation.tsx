@@ -1,5 +1,6 @@
 import React from 'react';
 import { Screen } from '../types';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface NavigationProps {
   currentScreen: Screen;
@@ -7,10 +8,11 @@ interface NavigationProps {
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate }) => {
+  const { t } = useLanguage();
   const navItems = [
-    { screen: Screen.HOME, icon: 'home', label: 'Home' },
-    { screen: Screen.HISTORY, icon: 'history', label: 'History' },
-    { screen: Screen.FAQ, icon: 'help', label: 'Help' },
+    { screen: Screen.HOME, icon: 'home', label: t.home },
+    { screen: Screen.HISTORY, icon: 'history', label: t.history },
+    { screen: Screen.FAQ, icon: 'help', label: t.help },
   ];
 
   if (currentScreen === Screen.PAYWALL) return null;
@@ -22,11 +24,10 @@ export const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigat
           <button
             key={item.screen}
             onClick={() => onNavigate(item.screen)}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              currentScreen === item.screen
+            className={`flex flex-col items-center gap-1 transition-colors ${currentScreen === item.screen
                 ? 'text-primary'
                 : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-            }`}
+              }`}
           >
             <span className="material-symbols-rounded text-2xl">
               {item.icon}

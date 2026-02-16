@@ -3,6 +3,7 @@ import { Screen } from '../types';
 import { explainDocument } from '../services/aiOrchestrator';
 import { AdModal } from '../components/AdModal';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { useLanguage, SUPPORTED_LANGS } from '../i18n/LanguageContext';
 
 interface HomeProps {
   onAnalysisComplete: (result: any) => void;
@@ -22,6 +23,7 @@ const MAX_FREE_CHARS = 15000;
 const MAX_DAILY_FREE_DOCS = 3;
 
 export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setLoading, isPro }) => {
+  const { t, lang, setLang } = useLanguage();
   const [country, setCountry] = useState('United States');
   const [jurisdiction, setJurisdiction] = useState('');
   const [context, setContext] = useState('');
@@ -205,8 +207,22 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       />
 
       <div className="mt-4 mb-6">
+        {/* Language Selector */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="material-symbols-rounded text-gray-400 text-sm">translate</span>
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as any)}
+            className="bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 rounded-lg px-2 py-1.5 border-0 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+          >
+            {SUPPORTED_LANGS.map(l => (
+              <option key={l.code} value={l.code}>{l.name}</option>
+            ))}
+          </select>
+        </div>
+
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight mb-3">
-          Explain administrative documents in <span className="text-primary">plain language</span>.
+          {t.heroTitle}
         </h2>
 
         <div className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full mb-2">
@@ -219,7 +235,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
             <>
               <span className={`w-2 h-2 rounded-full ${isLimitReached ? 'bg-red-500' : 'bg-green-500'}`}></span>
               <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                Free usage: {dailyUsage}/{MAX_DAILY_FREE_DOCS + bonusQuota} docs today
+                {dailyUsage}/{MAX_DAILY_FREE_DOCS + bonusQuota}
               </span>
             </>
           )}
@@ -236,8 +252,8 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
               <span className="material-symbols-rounded text-2xl">photo_camera</span>
             </div>
             <div className="text-left">
-              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">Scan</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Use camera</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{t.btnScan}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t.uploadLabel}</p>
             </div>
           </button>
 
@@ -249,7 +265,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
               <span className="material-symbols-rounded text-2xl">upload_file</span>
             </div>
             <div className="text-left">
-              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">Upload</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{t.uploadLabel.split(' ')[0]}</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">PDF, DOCX, TXT</p>
             </div>
           </button>
@@ -284,14 +300,14 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
 
       <div className="col-span-2">
         <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Context & Region</h3>
-          <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 text-[10px] font-bold">REQUIRED</span>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">{t.regionLabel}</h3>
+          <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 text-[10px] font-bold">⚙️</span>
         </div>
 
         <div className="bg-white dark:bg-surface-dark rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 ml-1">Country</label>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 ml-1">{t.country}</label>
             <div className="relative">
               <select
                 value={country}
@@ -335,21 +351,21 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
             <div className="space-y-3 pt-2">
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-xl p-3 flex items-center gap-3">
                 <span className="material-symbols-rounded text-red-500 text-xl">block</span>
-                <p className="text-xs text-red-700 dark:text-red-300 font-medium">Daily free limit reached.</p>
+                <p className="text-xs text-red-700 dark:text-red-300 font-medium">{t.limitTitle}</p>
               </div>
               <button
                 onClick={startRewardAd}
                 className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-rounded text-yellow-400">play_circle</span>
-                <span>Watch Ad (+1 Scan)</span>
+                <span>{t.watchAd}</span>
               </button>
               <button
                 onClick={() => onNavigate(Screen.PAYWALL)}
                 className="w-full bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 font-bold py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-rounded">diamond</span>
-                <span>Upgrade to Pro (Unlimited)</span>
+                <span>{t.upgradeCta}</span>
               </button>
             </div>
           ) : (
@@ -358,7 +374,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
               disabled={(!selectedFile && !context)}
               className={`w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${(!selectedFile && !context) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
             >
-              <span>Analyze Document</span>
+              <span>{t.btnAnalyze}</span>
               <span className="material-symbols-rounded text-sm">auto_awesome</span>
             </button>
           )}

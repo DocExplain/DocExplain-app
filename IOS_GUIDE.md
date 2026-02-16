@@ -17,14 +17,20 @@ Vérifie si tu l'as déjà :
 node -v
 npm -v
 ```
-Si tu obtiens une erreur, télécharge et installe la version **Node.js 16 ou 18** (compatible Catalina) depuis : [nodejs.org/download/release/](https://nodejs.org/download/release/v16.20.2/) (choisis le `.pkg`).
+Si tu obtiens une erreur, télécharge et installe la version **Node.js 16 (LTS)** (compatible Catalina) depuis : [nodejs.org/download/release/v16.20.2/node-v16.20.2.pkg](https://nodejs.org/download/release/v16.20.2/node-v16.20.2.pkg).
 
-### B. Installer CocoaPods
-CocoaPods gère les dépendances iOS natives.
+### B. Installer CocoaPods (Pour vieux Ruby)
+Ton Mac utilise probablement une ancienne version de Ruby (v2.6). Il faut installer des versions spécifiques des outils.
+
+Copie et colle ces commandes l'une après l'autre :
+
 ```bash
-sudo gem install cocoapods
+sudo gem install drb -v 2.0.6
+sudo gem install activesupport -v 6.1.7.7
+sudo gem install ffi -v 1.15.5
+sudo gem install cocoapods -v 1.12.1
 ```
-*(Entre ton mot de passe Mac quand demandé, il ne s'affichera pas à l'écran).*
+*(Entre ton mot de passe Mac à l'aveugle quand demandé).*
 
 ### C. Installer Xcode
 Si ce n'est pas déjà fait :

@@ -10,6 +10,7 @@ workflows:
       groups:
         - ios_credentials
       vars:
+        # Configuration
         BUNDLE_ID: "com.docexplain.documate"
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
@@ -32,48 +33,71 @@ workflows:
       - name: Sync Capacitor
         script: |
           npx cap sync ios
-      - name: Set up code signing
+      - name: Install certificates and profiles (using Codemagic tool)
         script: |
+          # This step decodes CM_* variables and installs them to the keychain/system
           xcode-project use-profiles --project "$XCODE_PROJECT"
-      - name: Debug signing settings
+      - name: Explicitly extract signing info and Archive
         script: |
-          echo "=== Checking project signing after use-profiles ==="
-          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -config Release -showBuildSettings | grep -E "CODE_SIGN|PROVISIONING|DEVELOPMENT_TEAM|PRODUCT_BUNDLE"
-          echo "=== Installed provisioning profiles ==="
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory"
-      - name: Archive
-        script: |
-          xcodebuild \
+          echo "🔍 Locating Provisioning Profile for $BUNDLE_ID..."
+          
+          # Find the profile file matching the Bundle ID
+          PROFILE_PATH=$(cd ~/Library/MobileDevice/Provisioning\ Profiles && grep -l "$BUNDLE_ID" *.mobileprovision | head -n 1)
+          
+          if [ -z "$PROFILE_PATH" ]; then
+            echo "❌ No provisioning profile found for $BUNDLE_ID"
+            ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
+            exit 1
+          fi
+          
+          FULL_PROFILE_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_PATH"
+          echo "✅ Found profile: $FULL_PROFILE_PATH"
+          
+          # Extract Info using security and plutil
+          # 1. Team ID
+          TEAM_ID=$(security cms -D -i "$FULL_PROFILE_PATH" | plutil -extract TeamIdentifier.0 raw -)
+          # 2. UUID
+          PROFILE_UUID=$(security cms -D -i "$FULL_PROFILE_PATH" | plutil -extract UUID raw -)
+          # 3. Name (for export options)
+          PROFILE_NAME=$(security cms -D -i "$FULL_PROFILE_PATH" | plutil -extract Name raw -)
+          
+          echo "ℹ️  Team ID: $TEAM_ID"
+          echo "ℹ️  Profile UUID: $PROFILE_UUID"
+          echo "ℹ️  Profile Name: $PROFILE_NAME"
+          
+          if [ -z "$TEAM_ID" ] || [ -z "$PROFILE_UUID" ]; then
+            echo "❌ Failed to extract signing info"
+            exit 1
+          fi
+
+          echo "📦 Archiving with Explicit Signing..."
+          
+          xcodebuild archive \
             -project "$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath "$ARCHIVE_PATH" \
-            archive \
+            CODE_SIGN_STYLE="Manual" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
             COMPILER_INDEX_STORE_ENABLE=NO
+
+          # Save extracted info for the next step (Export)
+          echo "TEAM_ID=$TEAM_ID" >> /tmp/signing_info
+          echo "PROFILE_NAME=$PROFILE_NAME" >> /tmp/signing_info
+          
       - name: Generate ExportOptions and export IPA
         script: |
-          # Find the installed provisioning profile name
-          PROFILE_NAME=$(cd ~/Library/MobileDevice/Provisioning\ Profiles && for f in *.mobileprovision; do
-            if security cms -D -i "$f" 2>/dev/null | grep -q "$BUNDLE_ID"; then
-              security cms -D -i "$f" 2>/dev/null | plutil -extract Name raw -
-              break
-            fi
-          done)
+          # Load the info we extracted in the previous step
+          source /tmp/signing_info
           
-          # Find team ID from provisioning profile
-          TEAM_ID=$(cd ~/Library/MobileDevice/Provisioning\ Profiles && for f in *.mobileprovision; do
-            if security cms -D -i "$f" 2>/dev/null | grep -q "$BUNDLE_ID"; then
-              security cms -D -i "$f" 2>/dev/null | plutil -extract TeamIdentifier.0 raw -
-              break
-            fi
-          done)
+          echo "🚀 Exporting IPA using Team ID: $TEAM_ID"
           
-          echo "Profile Name: $PROFILE_NAME"
-          echo "Team ID: $TEAM_ID"
-          
-          # Generate ExportOptions.plist
           mkdir -p "$IPA_DIR"
+          
+          # Create ExportOptions directly
           cat > exportOptions.plist << PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -96,7 +120,6 @@ workflows:
           </plist>
           PLIST
           
-          # Export the IPA
           xcodebuild -exportArchive \
             -archivePath "$ARCHIVE_PATH" \
             -exportOptionsPlist exportOptions.plist \

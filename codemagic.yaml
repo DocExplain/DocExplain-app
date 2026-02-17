@@ -153,10 +153,11 @@ workflows:
       - build/ios/*.xcarchive/**/*.dsym
     publishing:
       app_store_connect:
-        api_key: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        private_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        submit_to_testflight: true  # Automatically distribute to TestFlight internal testers
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY      # The .p8 key content
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER    # The Key ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID      # The Issuer ID
+        submit_to_testflight: true
+
       email:
         recipients:
           - user_email@example.com

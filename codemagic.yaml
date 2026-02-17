@@ -34,18 +34,31 @@ workflows:
       - name: Sync Capacitor
         script: |
           npx cap sync ios
-      - name: Install certificates and profiles (using Codemagic tool)
+      - name: Manual Certificate and Profile Installation
         script: |
-          # Debug: Verify variables are present
-          if [ -z "$CM_PROVISIONING_PROFILE" ]; then
-            echo "❌ ERROR: CM_PROVISIONING_PROFILE is empty. Check Environment Variables group 'ios_credentials'."
-            # Don't exit yet, let use-profiles try or fail, but log it clearly
-          else
-            echo "✅ CM_PROVISIONING_PROFILE is set (length: ${#CM_PROVISIONING_PROFILE})"
-          fi
+          echo "🔐 Setting up Keychain and Profiles..."
 
-          # This step decodes CM_* variables and installs them to the keychain/system
-          xcode-project use-profiles --project "$XCODE_PROJECT"
+          # Initialize Keychain
+          keychain initialize
+
+          # Decode Certificate (macOS base64)
+          echo "$CM_CERTIFICATE" | base64 -D -o /tmp/cert.p12 
+          
+          # Import Certificate
+          keychain add-certificates --certificate /tmp/cert.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
+          
+          echo "✅ Certificate imported"
+
+          # Decode Provisioning Profile
+          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_DIR"
+          
+          echo "$CM_PROVISIONING_PROFILE" | base64 -D -o "$PROFILES_DIR/manual_profile.mobileprovision"
+          
+          echo "✅ Provisioning Profile installed at $PROFILES_DIR/manual_profile.mobileprovision"
+          
+          # Verify
+          ls -la "$PROFILES_DIR/"
       - name: Explicitly extract signing info and Archive
         script: |
           echo "🔍 Locating Provisioning Profile for $BUNDLE_ID..."

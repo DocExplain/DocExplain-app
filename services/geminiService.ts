@@ -2,17 +2,17 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { AnalysisResult } from '../types';
 
 const getAiClient = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    console.error("API Key not found in environment variables");
-    throw new Error("API Key missing");
+    console.error("VITE_GEMINI_API_KEY not found in environment variables");
+    throw new Error("Gemini API Key missing");
   }
   return new GoogleGenAI({ apiKey });
 };
 
 export const explainDocument = async (contextAndText: string, fileName: string): Promise<AnalysisResult> => {
   const ai = getAiClient();
-  
+
   const prompt = `
     You are a legal expert AI named DocuMate. 
     Analyze the following legal document content and context.
@@ -48,7 +48,7 @@ export const explainDocument = async (contextAndText: string, fileName: string):
 
     const jsonText = response.text;
     if (!jsonText) throw new Error("No response from AI");
-    
+
     const parsed = JSON.parse(jsonText);
 
     return {
@@ -72,8 +72,8 @@ export const explainDocument = async (contextAndText: string, fileName: string):
 };
 
 export const generateDraft = async (
-  context: string, 
-  tone: string, 
+  context: string,
+  tone: string,
   template: string
 ): Promise<string> => {
   const ai = getAiClient();

@@ -80,7 +80,7 @@ const App: React.FC = () => {
         <div className="w-full max-w-md bg-white dark:bg-background-dark min-h-screen relative flex flex-col shadow-2xl overflow-hidden">
           {/* Header */}
           <header className="px-6 py-4 flex justify-between items-center sticky top-0 z-30 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
-            {currentScreen !== Screen.HOME && currentScreen !== Screen.FAQ && currentScreen !== Screen.HISTORY ? (
+            {currentScreen !== Screen.HOME && currentScreen !== Screen.FAQ && currentScreen !== Screen.HISTORY && currentScreen !== Screen.PAYWALL ? (
               <button onClick={() => setCurrentScreen(Screen.HOME)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 <span className="material-symbols-rounded text-gray-900 dark:text-white">arrow_back</span>
               </button>
@@ -119,6 +119,12 @@ const App: React.FC = () => {
             <div className="absolute inset-0 z-50 bg-white/50 dark:bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in">
               <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
               <p className="text-primary font-bold animate-pulse">Analyzing Document...</p>
+              <button
+                onClick={() => setLoading(false)}
+                className="mt-6 px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           )}
 

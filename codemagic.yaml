@@ -108,8 +108,8 @@ workflows:
             COMPILER_INDEX_STORE_ENABLE=NO
 
           # Save extracted info for the next step (Export)
-          echo "TEAM_ID=$TEAM_ID" >> /tmp/signing_info
-          echo "PROFILE_NAME=$PROFILE_NAME" >> /tmp/signing_info
+          echo "TEAM_ID=\"$TEAM_ID\"" >> /tmp/signing_info
+          echo "PROFILE_NAME=\"$PROFILE_NAME\"" >> /tmp/signing_info
           
       - name: Generate ExportOptions and export IPA
         script: |

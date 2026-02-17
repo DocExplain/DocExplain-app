@@ -7,8 +7,7 @@ workflows:
       node: 22
       xcode: latest
       cocoapods: default
-      groups:
-        - ios_credentials
+
       vars:
         # Configuration
         BUNDLE_ID: "com.docexplain.documate"

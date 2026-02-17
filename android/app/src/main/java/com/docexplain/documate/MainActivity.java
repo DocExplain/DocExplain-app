@@ -1,4 +1,4 @@
-package com.documate.app;
+package com.docexplain.documate;
 
 import com.getcapacitor.BridgeActivity;
 

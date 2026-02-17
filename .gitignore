@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 temp_repo/
+temp_repo_web/
+CM_CERTIFICATE.txt
+CM_PROVISIONING_PROFILE.txt

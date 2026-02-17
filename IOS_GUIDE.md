@@ -92,7 +92,7 @@ npx cap open ios
 4. Va dans l'onglet **Signing & Capabilities**.
 5. Dans la section **Signing** :
    - **Team** : Sélectionne ton compte Apple Developer personnel.
-   - **Bundle Identifier** : Doit être `com.documate.app` (ou celui que tu as défini sur ton compte Apple).
+   - **Bundle Identifier** : Doit être `com.docexplain.documate` (ou celui que tu as défini sur ton compte Apple).
 
 ---
 

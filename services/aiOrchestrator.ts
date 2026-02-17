@@ -15,7 +15,13 @@ const getOpenAIClient = () => {
     return new OpenAI({ apiKey, dangerouslyAllowBrowser: true }); // Client-side usage for demo
 };
 
-export const explainDocument = async (contextAndText: string, fileName: string): Promise<AnalysisResult> => {
+export const explainDocument = async (contextAndText: string, fileName: string, imageBase64?: string): Promise<AnalysisResult> => {
+    // If we have an image, go straight to Gemini (supports vision)
+    if (imageBase64) {
+        console.log('Image detected, using Gemini Vision.');
+        return explainGemini(contextAndText, fileName, imageBase64);
+    }
+
     // 1. Check Length & Key Availability
     if (contextAndText.length > LENGTH_THRESHOLD) {
         console.log(`Document length (${contextAndText.length}) exceeds threshold. Using Gemini.`);

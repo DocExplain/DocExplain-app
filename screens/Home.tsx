@@ -28,6 +28,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   const [jurisdiction, setJurisdiction] = useState('');
   const [context, setContext] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [cameraBase64, setCameraBase64] = useState<string | null>(null);
 
   // Usage & Limits
   const [dailyUsage, setDailyUsage] = useState(0);
@@ -82,13 +83,9 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       });
 
       if (image.base64String) {
-        // In a real app, we'd use OCR here. For now, we simulate a scanned document.
-        const mockFile = new File(
-          [new Blob(["Simulated scan content of a contract."])],
-          `scan_${new Date().getTime()}.txt`,
-          { type: 'text/plain' }
-        );
-        setSelectedFile(mockFile);
+        // Store real base64 for Gemini Vision analysis
+        setCameraBase64(image.base64String);
+        setSelectedFile(null);
       }
     } catch (e) {
       console.error("Camera error or canceled", e);
@@ -119,36 +116,60 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   };
 
   const handleAnalyze = async () => {
-    if (!selectedFile && !context) return;
+    if (!selectedFile && !context && !cameraBase64) return;
 
     // Pre-check limit strictly before processing
     if (!isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota)) {
-      return; // UI handles the "Limit Reached" view
+      return;
     }
 
     setLoading(true);
 
     let textToAnalyze = "";
     let docName = "Context Analysis";
+    let imageBase64: string | undefined;
 
-    if (selectedFile) {
+    // Path 1: Camera scan — send base64 image to Gemini Vision
+    if (cameraBase64) {
+      docName = `scan_${new Date().getTime()}.jpg`;
+      imageBase64 = cameraBase64;
+      textToAnalyze = context || "Analyze this scanned document.";
+    }
+    // Path 2: File upload
+    else if (selectedFile) {
       docName = selectedFile.name;
       try {
-        textToAnalyze = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string || "");
-          reader.readAsText(selectedFile);
-        });
-
-        if (textToAnalyze.length < 50 || selectedFile.type.includes('pdf')) {
-          textToAnalyze = "This is a simulated legal document content for demonstration purposes.";
+        if (selectedFile.type.includes('pdf') || selectedFile.type.includes('image')) {
+          // For PDFs and images: read as base64 for Gemini Vision
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const result = e.target?.result as string || "";
+              // Strip the data URL prefix (data:application/pdf;base64,)
+              const base64Data = result.split(',')[1] || result;
+              resolve(base64Data);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(selectedFile);
+          });
+          imageBase64 = base64;
+          textToAnalyze = context || "Analyze this document.";
+        } else {
+          // For text files: read as text
+          textToAnalyze = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string || "");
+            reader.readAsText(selectedFile);
+          });
         }
       } catch (e) {
         console.error("File read error", e);
         setLoading(false);
         return;
       }
-    } else {
+    }
+    // Path 3: Text paste only
+    else {
       textToAnalyze = context;
     }
 
@@ -163,14 +184,14 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       Jurisdiction: ${country} ${jurisdiction ? `(${jurisdiction})` : ''}
     `;
 
-    const result = await explainDocument(fullContext, docName);
+    const result = await explainDocument(fullContext, docName, imageBase64);
 
     incrementUsage();
     setLoading(false);
+    setCameraBase64(null);
 
     // Ad Logic
     if (!isPro) {
-      // Show Interstitial Ad before result
       setPendingResult(result);
       setAdType('interstitial');
       setShowAd(true);
@@ -196,6 +217,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
 
   // Derived state for UI
   const isLimitReached = !isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota);
+  const hasInput = selectedFile || context || cameraBase64;
 
   return (
     <div className="flex-1 flex flex-col px-6 pb-32 animate-fade-in relative">
@@ -242,7 +264,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         </div>
       </div>
 
-      {!selectedFile ? (
+      {!selectedFile && !cameraBase64 ? (
         <div className="grid grid-cols-2 gap-4 mb-6">
           <button
             onClick={handleScan}
@@ -274,15 +296,19 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         <div className="mb-6 bg-white dark:bg-surface-dark rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between animate-fade-in">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary shrink-0">
-              <span className="material-symbols-rounded">description</span>
+              <span className="material-symbols-rounded">{cameraBase64 ? 'photo_camera' : 'description'}</span>
             </div>
             <div className="min-w-0">
-              <p className="font-medium text-gray-900 dark:text-white truncate text-sm">{selectedFile.name}</p>
-              <p className="text-xs text-gray-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+              <p className="font-medium text-gray-900 dark:text-white truncate text-sm">
+                {cameraBase64 ? 'Scanned Document' : selectedFile?.name}
+              </p>
+              <p className="text-xs text-gray-500">
+                {cameraBase64 ? 'Ready for AI Vision analysis' : `${((selectedFile?.size || 0) / 1024).toFixed(1)} KB`}
+              </p>
             </div>
           </div>
           <button
-            onClick={() => setSelectedFile(null)}
+            onClick={() => { setSelectedFile(null); setCameraBase64(null); }}
             className="p-2 text-gray-400 hover:text-red-500 transition-colors"
           >
             <span className="material-symbols-rounded">close</span>
@@ -371,8 +397,8 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
           ) : (
             <button
               onClick={handleAnalyze}
-              disabled={(!selectedFile && !context)}
-              className={`w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${(!selectedFile && !context) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
+              disabled={!hasInput}
+              className={`w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${!hasInput ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
             >
               <span>{t.btnAnalyze}</span>
               <span className="material-symbols-rounded text-sm">auto_awesome</span>

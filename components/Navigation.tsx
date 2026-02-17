@@ -15,7 +15,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigat
     { screen: Screen.FAQ, icon: 'help', label: t.help },
   ];
 
-  if (currentScreen === Screen.PAYWALL) return null;
+  if (currentScreen === Screen.PAYWALL || currentScreen === Screen.RESULT) return null;
 
   return (
     <nav className="fixed bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none">
@@ -25,8 +25,8 @@ export const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigat
             key={item.screen}
             onClick={() => onNavigate(item.screen)}
             className={`flex flex-col items-center gap-1 transition-colors ${currentScreen === item.screen
-                ? 'text-primary'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+              ? 'text-primary'
+              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
               }`}
           >
             <span className="material-symbols-rounded text-2xl">

@@ -226,6 +226,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         type={adType}
         onClose={handleAdClose}
         onReward={handleAdReward}
+        onUpgrade={() => { setShowAd(false); onNavigate(Screen.PAYWALL); }}
       />
 
       <div className="mt-4 mb-6">

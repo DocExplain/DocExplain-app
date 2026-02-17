@@ -88,7 +88,7 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 z-40" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <div className="max-w-md mx-auto flex gap-3">
           <button
             onClick={onBack}

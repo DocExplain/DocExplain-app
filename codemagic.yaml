@@ -7,7 +7,9 @@ workflows:
       node: 22
       xcode: latest
       cocoapods: default
-
+      # Restore the group linkage so CM_ variables are injected
+      groups:
+        - ios_credentials
       vars:
         # Configuration
         BUNDLE_ID: "com.docexplain.documate"
@@ -34,6 +36,14 @@ workflows:
           npx cap sync ios
       - name: Install certificates and profiles (using Codemagic tool)
         script: |
+          # Debug: Verify variables are present
+          if [ -z "$CM_PROVISIONING_PROFILE" ]; then
+            echo "❌ ERROR: CM_PROVISIONING_PROFILE is empty. Check Environment Variables group 'ios_credentials'."
+            # Don't exit yet, let use-profiles try or fail, but log it clearly
+          else
+            echo "✅ CM_PROVISIONING_PROFILE is set (length: ${#CM_PROVISIONING_PROFILE})"
+          fi
+
           # This step decodes CM_* variables and installs them to the keychain/system
           xcode-project use-profiles --project "$XCODE_PROJECT"
       - name: Explicitly extract signing info and Archive
@@ -45,7 +55,8 @@ workflows:
           
           if [ -z "$PROFILE_PATH" ]; then
             echo "❌ No provisioning profile found for $BUNDLE_ID"
-            ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
+            echo "📂 Listing profiles directory:"
+            ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "Directory not found"
             exit 1
           fi
           

@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.documate.app',
-  appName: 'DocuMate',
+  appId: 'com.docexplain.documate',
+  appName: 'DocuMate AI',
   webDir: 'dist'
 };
 

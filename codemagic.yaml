@@ -7,6 +7,14 @@ workflows:
       node: 22
       xcode: latest
       cocoapods: default
+      groups:
+        - ios_credentials
+      vars:
+        BUNDLE_ID: "com.docexplain.documate"
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+        ARCHIVE_PATH: "build/ios/App.xcarchive"
+        IPA_DIR: "build/ios/ipa"
     triggering:
       events:
         - push
@@ -24,23 +32,83 @@ workflows:
       - name: Sync Capacitor
         script: |
           npx cap sync ios
-      - name: Set up code signing settings on Xcode project
+      - name: Set up code signing
         script: |
-          xcode-project use-profiles --project "ios/App/App.xcodeproj"
-      - name: Build IPA for App Store
+          xcode-project use-profiles --project "$XCODE_PROJECT"
+      - name: Debug signing settings
         script: |
-          xcode-project build-ipa \
-            --project "ios/App/App.xcodeproj" \
-            --scheme "App" \
-            --config "Release"
+          echo "=== Checking project signing after use-profiles ==="
+          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -config Release -showBuildSettings | grep -E "CODE_SIGN|PROVISIONING|DEVELOPMENT_TEAM|PRODUCT_BUNDLE"
+          echo "=== Installed provisioning profiles ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory"
+      - name: Archive
+        script: |
+          xcodebuild \
+            -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$ARCHIVE_PATH" \
+            archive \
+            COMPILER_INDEX_STORE_ENABLE=NO
+      - name: Generate ExportOptions and export IPA
+        script: |
+          # Find the installed provisioning profile name
+          PROFILE_NAME=$(cd ~/Library/MobileDevice/Provisioning\ Profiles && for f in *.mobileprovision; do
+            if security cms -D -i "$f" 2>/dev/null | grep -q "$BUNDLE_ID"; then
+              security cms -D -i "$f" 2>/dev/null | plutil -extract Name raw -
+              break
+            fi
+          done)
+          
+          # Find team ID from provisioning profile
+          TEAM_ID=$(cd ~/Library/MobileDevice/Provisioning\ Profiles && for f in *.mobileprovision; do
+            if security cms -D -i "$f" 2>/dev/null | grep -q "$BUNDLE_ID"; then
+              security cms -D -i "$f" 2>/dev/null | plutil -extract TeamIdentifier.0 raw -
+              break
+            fi
+          done)
+          
+          echo "Profile Name: $PROFILE_NAME"
+          echo "Team ID: $TEAM_ID"
+          
+          # Generate ExportOptions.plist
+          mkdir -p "$IPA_DIR"
+          cat > exportOptions.plist << PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store-connect</string>
+              <key>teamID</key>
+              <string>$TEAM_ID</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>$BUNDLE_ID</key>
+                  <string>$PROFILE_NAME</string>
+              </dict>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
+          </dict>
+          </plist>
+          PLIST
+          
+          # Export the IPA
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportOptionsPlist exportOptions.plist \
+            -exportPath "$IPA_DIR"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - "*.dsym"
+      - build/ios/*.xcarchive/**/*.dsym
     publishing:
       email:
         recipients:
-          - user_email@example.com # You can update this in Codemagic UI
+          - user_email@example.com
         notify:
           success: true
           failure: true

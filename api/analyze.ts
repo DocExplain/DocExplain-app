@@ -1,3 +1,4 @@
+// DocuMate API - Updated: 2026-02-18T13:30
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 

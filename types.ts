@@ -14,6 +14,13 @@ export interface AnalysisResult {
   warning?: string;
   fileName: string;
   timestamp: string;
+  // new fields
+  category?: 'bill' | 'form' | 'scam' | 'legal' | 'other';
+  suggestedActions?: {
+    type: 'pay' | 'fill' | 'dispute' | 'ignore' | 'clarify';
+    label: string;
+    description: string;
+  }[];
 }
 
 export interface DraftRequest {

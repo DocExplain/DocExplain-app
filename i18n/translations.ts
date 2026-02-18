@@ -42,6 +42,11 @@ export interface TranslationStrings {
     noHistory: string; analyzeFirst: string;
     // General
     language: string; country: string;
+    // Categories
+    catBill: string; catForm: string; catScam: string; catLegal: string;
+    // Advice labels
+    actionPay: string; actionFill: string; actionDispute: string; actionIgnore: string;
+    targetLang: string; simpleExplanation: string;
 }
 
 const en: TranslationStrings = {
@@ -78,6 +83,9 @@ const en: TranslationStrings = {
     terms: "Terms of Service", privacy: "Privacy Policy", startTrial: "Start Free Trial", cancelAnytime: "Cancel anytime.",
     noHistory: "No history yet", analyzeFirst: "Analyze a document to see it here.",
     language: "Language", country: "Country",
+    catBill: "Invoice / Bill", catForm: "Form", catScam: "Potential Scam", catLegal: "Legal Document",
+    actionPay: "Pay Bill", actionFill: "How to Fill", actionDispute: "Contest", actionIgnore: "Ignore / Safe",
+    targetLang: "Reply Language", simpleExplanation: "What this means for you",
 };
 
 const fr: TranslationStrings = {
@@ -114,6 +122,9 @@ const fr: TranslationStrings = {
     terms: "CGU", privacy: "Confidentialité", startTrial: "Essai gratuit", cancelAnytime: "Annulez à tout moment.",
     noHistory: "Pas encore d'historique", analyzeFirst: "Analysez un document pour le voir ici.",
     language: "Langue", country: "Pays",
+    catBill: "Facture", catForm: "Formulaire", catScam: "Arnaque Potentielle", catLegal: "Document Juridique",
+    actionPay: "Payer la facture", actionFill: "Comment remplir", actionDispute: "Contester", actionIgnore: "Ignorer / Sécurisé",
+    targetLang: "Langue de réponse", simpleExplanation: "Ce que cela signifie pour vous",
 };
 
 const de: TranslationStrings = {

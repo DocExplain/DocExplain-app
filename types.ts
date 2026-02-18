@@ -21,6 +21,7 @@ export interface AnalysisResult {
     label: string;
     description: string;
   }[];
+  fullText?: string;
 }
 
 export interface DraftRequest {

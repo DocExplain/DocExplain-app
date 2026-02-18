@@ -49,7 +49,15 @@ export const generateDraft = async (summary: string, tone: string, template: str
         }
 
         const data = await response.json();
-        return data.draft || "Could not generate draft.";
+        const draftContent = data.draft;
+
+        if (typeof draftContent === 'object' && draftContent !== null) {
+            return Object.entries(draftContent)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join('\n');
+        }
+
+        return typeof draftContent === 'string' ? draftContent : "Could not generate draft.";
     } catch (err: any) {
         console.error("Draft failed:", err);
         return "Error generating response.";

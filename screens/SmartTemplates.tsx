@@ -14,13 +14,21 @@ type ResponsePath = 'extension' | 'dispute' | 'clarify' | 'accept' | 'fill';
 export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialAction, onBack }) => {
     const { t, lang } = useLanguage();
 
-    const responsePaths: { id: ResponsePath; icon: string; label: string; subtitle: string }[] = [
+    const allResponsePaths: { id: ResponsePath; icon: string; label: string; subtitle: string }[] = [
         { id: 'extension', icon: 'schedule', label: t.reqExtension, subtitle: t.extSub },
         { id: 'dispute', icon: 'gavel', label: t.dispute, subtitle: t.disputeSub },
         { id: 'clarify', icon: 'help', label: t.clarify, subtitle: t.clarifySub },
         { id: 'accept', icon: 'check_circle', label: t.accept, subtitle: t.acceptSub },
         { id: 'fill', icon: 'edit_square', label: t.fillForm, subtitle: t.fillFormSub },
     ];
+
+    const responsePaths = allResponsePaths.filter(path => {
+        const cat = result.category?.toLowerCase() || '';
+        if (path.id === 'fill') return cat === 'form';
+        if (path.id === 'dispute') return ['bill', 'legal', 'lease', 'scam'].includes(cat);
+        if (path.id === 'extension') return ['bill', 'legal', 'lease', 'medical'].includes(cat);
+        return true; // clarify and accept always shown
+    });
 
     const templateMap: Record<ResponsePath, string> = {
         extension: 'Extension',
@@ -53,7 +61,8 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     const handleGenerate = async () => {
         setLoading(true);
         try {
-            const text = await generateDraft(result.summary, tone, templateMap[selectedPath], lang);
+            const context = result.fullText || result.summary;
+            const text = await generateDraft(context, tone, templateMap[selectedPath], lang);
             setDraft(text);
         } catch {
             setDraft('Could not generate draft. Please try again.');

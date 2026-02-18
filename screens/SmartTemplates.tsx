@@ -5,28 +5,43 @@ import { useLanguage } from '../i18n/LanguageContext';
 
 interface SmartTemplatesProps {
     result: AnalysisResult;
+    initialAction?: any;
     onBack: () => void;
 }
 
-type ResponsePath = 'extension' | 'dispute' | 'clarify' | 'accept';
+type ResponsePath = 'extension' | 'dispute' | 'clarify' | 'accept' | 'fill';
 
-const responsePaths: { id: ResponsePath; icon: string; label: string; subtitle: string }[] = [
-    { id: 'extension', icon: 'schedule', label: 'Request Extension', subtitle: 'Ask for 14 more days' },
-    { id: 'dispute', icon: 'gavel', label: 'Dispute Claim', subtitle: 'Disagree with findings' },
-    { id: 'clarify', icon: 'help', label: 'Seek Clarification', subtitle: 'Ask for definitions' },
-    { id: 'accept', icon: 'check_circle', label: 'Accept & Proceed', subtitle: 'Agree to terms' },
-];
+export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialAction, onBack }) => {
+    const { t, lang } = useLanguage();
 
-const templateMap: Record<ResponsePath, string> = {
-    extension: 'Extension',
-    dispute: 'Dispute',
-    clarify: 'Clarify',
-    accept: 'Accept',
-};
+    const responsePaths: { id: ResponsePath; icon: string; label: string; subtitle: string }[] = [
+        { id: 'extension', icon: 'schedule', label: t.reqExtension, subtitle: t.extSub },
+        { id: 'dispute', icon: 'gavel', label: t.dispute, subtitle: t.disputeSub },
+        { id: 'clarify', icon: 'help', label: t.clarify, subtitle: t.clarifySub },
+        { id: 'accept', icon: 'check_circle', label: t.accept, subtitle: t.acceptSub },
+        { id: 'fill', icon: 'edit_square', label: t.fillForm, subtitle: t.fillFormSub },
+    ];
 
-export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, onBack }) => {
-    const { t } = useLanguage();
-    const [selectedPath, setSelectedPath] = useState<ResponsePath>('extension');
+    const templateMap: Record<ResponsePath, string> = {
+        extension: 'Extension',
+        dispute: 'Dispute',
+        clarify: 'Clarify',
+        accept: 'Accept',
+        fill: 'Form Filling Data',
+    };
+
+    const getInitialPath = (): ResponsePath => {
+        if (!initialAction) return 'extension';
+        switch (initialAction.type) {
+            case 'dispute': return 'dispute';
+            case 'clarify': return 'clarify';
+            case 'fill': return 'fill';
+            case 'pay': return 'accept';
+            default: return 'extension';
+        }
+    };
+
+    const [selectedPath, setSelectedPath] = useState<ResponsePath>(getInitialPath());
     const [draft, setDraft] = useState('');
     const [loading, setLoading] = useState(false);
     const [tone, setTone] = useState<'Professional' | 'Friendly' | 'Firm'>('Professional');
@@ -38,7 +53,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, onBack }
     const handleGenerate = async () => {
         setLoading(true);
         try {
-            const text = await generateDraft(result.summary, tone, templateMap[selectedPath]);
+            const text = await generateDraft(result.summary, tone, templateMap[selectedPath], lang);
             setDraft(text);
         } catch {
             setDraft('Could not generate draft. Please try again.');

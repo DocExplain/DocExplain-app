@@ -21,6 +21,7 @@ export interface TranslationStrings {
     // SmartTemplates
     reqExtension: string; extSub: string; dispute: string; disputeSub: string;
     clarify: string; clarifySub: string; accept: string; acceptSub: string;
+    fillForm: string; fillFormSub: string;
     chooseResponse: string; generating: string; generate: string;
     generatedDraft: string; editBelow: string; copy: string; copied: string;
     previewPdf: string; sendEmail: string;
@@ -63,6 +64,7 @@ const en: TranslationStrings = {
     back: "Back", askFollowup: "Ask Follow-up",
     reqExtension: "Request Extension", extSub: "Ask for 14 more days", dispute: "Dispute", disputeSub: "Contest a charge or clause",
     clarify: "Clarify", clarifySub: "Ask for more details", accept: "Accept", acceptSub: "Confirm and agree",
+    fillForm: "Fill Form", fillFormSub: "Extract data for form fields",
     chooseResponse: "Choose Your Response", generating: "Generating draft…", generate: "Generate Draft",
     generatedDraft: "Generated Draft", editBelow: "Edit below before sending", copy: "Copy", copied: "Copied!",
     previewPdf: "Preview PDF", sendEmail: "Send Email",
@@ -102,6 +104,7 @@ const fr: TranslationStrings = {
     back: "Retour", askFollowup: "Question de suivi",
     reqExtension: "Demander un délai", extSub: "Demander 14 jours de plus", dispute: "Contester", disputeSub: "Contester un frais ou une clause",
     clarify: "Clarifier", clarifySub: "Demander plus de détails", accept: "Accepter", acceptSub: "Confirmer et accepter",
+    fillForm: "Remplir le formulaire", fillFormSub: "Extraire les données à remplir",
     chooseResponse: "Choisissez votre réponse", generating: "Génération en cours…", generate: "Générer le brouillon",
     generatedDraft: "Brouillon généré", editBelow: "Modifiez avant d'envoyer", copy: "Copier", copied: "Copié !",
     previewPdf: "Aperçu PDF", sendEmail: "Envoyer l'e-mail",

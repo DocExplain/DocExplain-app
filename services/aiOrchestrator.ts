@@ -36,12 +36,12 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
     }
 };
 
-export const generateDraft = async (summary: string, tone: string, template: string): Promise<string> => {
+export const generateDraft = async (summary: string, tone: string, template: string, lang: string): Promise<string> => {
     try {
         const response = await fetch(`${API_URL}/api/draft`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ context: summary, tone, template })
+            body: JSON.stringify({ context: summary, tone, template, lang })
         });
 
         if (!response.ok) {

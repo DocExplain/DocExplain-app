@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.HOME);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [history, setHistory] = useState<AnalysisResult[]>([]);
+  const [selectedAction, setSelectedAction] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   // Subscription State
@@ -41,13 +42,17 @@ const App: React.FC = () => {
           <Result
             result={analysisResult}
             onBack={() => setCurrentScreen(Screen.HOME)}
-            onDraft={() => setCurrentScreen(Screen.SMART_TEMPLATES)}
+            onDraft={(action) => {
+              setSelectedAction(action);
+              setCurrentScreen(Screen.SMART_TEMPLATES);
+            }}
           />
         ) : <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={setCurrentScreen} setLoading={setLoading} isPro={isPro} />;
       case Screen.SMART_TEMPLATES:
         return analysisResult ? (
           <SmartTemplates
             result={analysisResult}
+            initialAction={selectedAction}
             onBack={() => setCurrentScreen(Screen.RESULT)}
           />
         ) : null;

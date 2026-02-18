@@ -5,7 +5,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 interface ResultProps {
   result: AnalysisResult;
   onBack: () => void;
-  onDraft: () => void;
+  onDraft: (action?: any) => void;
 }
 
 export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
@@ -88,7 +88,7 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
           {result.suggestedActions?.map((action, i) => (
             <button
               key={i}
-              onClick={onDraft}
+              onClick={() => onDraft(action)}
               className="flex items-center p-4 bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-primary dark:hover:border-primary group transition-all"
             >
               <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors ${action.type === 'pay' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 group-hover:bg-green-600 group-hover:text-white' :

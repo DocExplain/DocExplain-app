@@ -12,7 +12,7 @@ workflows:
         - ios_credentials
       vars:
         # Configuration
-        VITE_API_URL: "https://documate.vercel.app"
+        VITE_API_URL: "https://doc-explain-app.vercel.app"
         BUNDLE_ID: "com.docexplain.documate"
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"

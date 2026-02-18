@@ -30,9 +30,8 @@ workflows:
           npm install
       - name: Build web app
         script: |
-          # Create .env.local with API keys for client-side Gemini calls
-          echo "VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY" > .env.local
-          echo "VITE_API_URL=$VITE_API_URL" >> .env.local
+          # Create .env.local with Vercel API URL (keys are server-side now)
+          echo "VITE_API_URL=$VITE_API_URL" > .env.local
           npm run build
       - name: Sync Capacitor
         script: |

@@ -58,10 +58,12 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
           <section>
             <h3 className="font-semibold text-lg mb-3 text-gray-900 dark:text-white">{t.keyPoints}</h3>
             <ul className="space-y-3">
-              <li key={i} className="flex items-start gap-3">
-                <span className="material-symbols-rounded text-primary text-[10px] mt-1.5">circle</span>
-                <span className="text-sm text-gray-600 dark:text-gray-300">{point}</span>
-              </li>
+              {result.keyPoints.map((point, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="material-symbols-rounded text-primary text-[10px] mt-1.5">circle</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{point}</span>
+                </li>
+              ))}
             </ul>
           </section>
 

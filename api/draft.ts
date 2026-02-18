@@ -47,15 +47,13 @@ You must return a JSON object with:
         if (geminiKey) {
             try {
                 const ai = new GoogleGenAI({ apiKey: geminiKey });
-                const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-                const result = await model.generateContent({
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.0-flash",
                     contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
-                    generationConfig: { responseMimeType: "application/json" }
+                    config: { responseMimeType: "application/json" }
                 });
 
-                const text = result.text || (result as any).response?.text?.() || "";
-                return new Response(text, {
+                return new Response(response.text || "", {
                     headers: { 'Content-Type': 'application/json' }
                 });
             } catch (e: any) {

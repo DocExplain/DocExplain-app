@@ -19,7 +19,6 @@ Return a JSON object with:
 
 async function analyzeWithGemini(contextAndText: string, fileName: string, imageBase64: string | undefined, geminiKey: string) {
     const ai = new GoogleGenAI({ apiKey: geminiKey });
-    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     let contents: any[] = [];
 
@@ -44,9 +43,10 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
     }
 
     try {
-        const response = await model.generateContent({
+        const response = await ai.models.generateContent({
+            model: "gemini-2.0-flash",
             contents,
-            generationConfig: {
+            config: {
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: "object",
@@ -72,9 +72,7 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
             }
         });
 
-        // In @google/genai v1.x, the result itself contains the response properties
-        const text = response.text || (response as any).response?.text?.() || "";
-        return JSON.parse(text);
+        return JSON.parse(response.text || "");
     } catch (e: any) {
         console.error("Gemini Analysis Error:", e);
         throw e;

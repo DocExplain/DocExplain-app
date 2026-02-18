@@ -7,10 +7,16 @@ export const config = {
 };
 
 const JSON_PROMPT = `You are a legal expert AI named DocuMate. Analyze the provided document.
+Output MUST be in the user's language unless specified otherwise.
 Return a JSON object with:
 - "summary": 2-3 sentences plain English summary
 - "keyPoints": array of 5 key points
-- "warning": potential risks or "null" if none`;
+- "warning": potential risks or "null" if none
+- "category": one of ["bill", "form", "scam", "legal", "other"]
+- "suggestedActions": array of {type, label, description}
+  - type: one of ["pay", "fill", "dispute", "ignore", "clarify"]
+  - label: short action button text (3 words max)
+  - description: why this action is recommended`;
 
 async function analyzeWithGemini(contextAndText: string, fileName: string, imageBase64: string | undefined, geminiKey: string) {
     const ai = new GoogleGenAI({ apiKey: geminiKey });
@@ -48,8 +54,20 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
                     summary: { type: Type.STRING },
                     keyPoints: { type: Type.ARRAY, items: { type: Type.STRING } },
                     warning: { type: Type.STRING },
+                    category: { type: Type.STRING },
+                    suggestedActions: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                type: { type: Type.STRING },
+                                label: { type: Type.STRING },
+                                description: { type: Type.STRING },
+                            },
+                        }
+                    }
                 },
-                required: ["summary", "keyPoints"]
+                required: ["summary", "keyPoints", "category", "suggestedActions"]
             }
         }
     });

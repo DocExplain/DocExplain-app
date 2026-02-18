@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, SchemaType } from "@google/genai";
 import OpenAI from "openai";
 
 export const config = {
@@ -49,20 +49,20 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
         generationConfig: {
             responseMimeType: "application/json",
             responseSchema: {
-                type: Type.OBJECT,
+                type: SchemaType.OBJECT,
                 properties: {
-                    summary: { type: Type.STRING },
-                    keyPoints: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    warning: { type: Type.STRING },
-                    category: { type: Type.STRING },
+                    summary: { type: SchemaType.STRING },
+                    keyPoints: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+                    warning: { type: SchemaType.STRING },
+                    category: { type: SchemaType.STRING },
                     suggestedActions: {
-                        type: Type.ARRAY,
+                        type: SchemaType.ARRAY,
                         items: {
-                            type: Type.OBJECT,
+                            type: SchemaType.OBJECT,
                             properties: {
-                                type: { type: Type.STRING },
-                                label: { type: Type.STRING },
-                                description: { type: Type.STRING },
+                                type: { type: SchemaType.STRING },
+                                label: { type: SchemaType.STRING },
+                                description: { type: SchemaType.STRING },
                             },
                         }
                     }

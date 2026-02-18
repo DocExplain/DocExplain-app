@@ -1,5 +1,4 @@
-
-import { GoogleGenAI, SchemaType } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 
 export const config = {
@@ -44,36 +43,42 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
         }];
     }
 
-    const result = await model.generateContent({
-        contents,
-        generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: SchemaType.OBJECT,
-                properties: {
-                    summary: { type: SchemaType.STRING },
-                    keyPoints: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-                    warning: { type: SchemaType.STRING },
-                    category: { type: SchemaType.STRING },
-                    suggestedActions: {
-                        type: SchemaType.ARRAY,
-                        items: {
-                            type: SchemaType.OBJECT,
-                            properties: {
-                                type: { type: SchemaType.STRING },
-                                label: { type: SchemaType.STRING },
-                                description: { type: SchemaType.STRING },
-                            },
+    try {
+        const response = await model.generateContent({
+            contents,
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "object",
+                    properties: {
+                        summary: { type: "string" },
+                        keyPoints: { type: "array", items: { type: "string" } },
+                        warning: { type: "string" },
+                        category: { type: "string" },
+                        suggestedActions: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    type: { type: "string" },
+                                    label: { type: "string" },
+                                    description: { type: "string" },
+                                },
+                            }
                         }
-                    }
-                },
-                required: ["summary", "keyPoints", "category", "suggestedActions"]
+                    },
+                    required: ["summary", "keyPoints", "category", "suggestedActions"]
+                }
             }
-        }
-    });
+        });
 
-    const response = await result.response;
-    return JSON.parse(response.text());
+        // In @google/genai v1.x, the result itself contains the response properties
+        const text = response.text || (response as any).response?.text?.() || "";
+        return JSON.parse(text);
+    } catch (e: any) {
+        console.error("Gemini Analysis Error:", e);
+        throw e;
+    }
 }
 
 async function analyzeWithOpenAI(contextAndText: string, fileName: string, imageBase64: string | undefined, openaiKey: string) {
@@ -132,6 +137,8 @@ export default async function handler(req: Request) {
 
         const openaiKey = process.env.OPENAI_API_KEY;
         const geminiKey = process.env.GEMINI_API_KEY;
+
+        console.log(`Keys available: OpenAI: ${!!openaiKey}, Gemini: ${!!geminiKey}`);
 
         if (!openaiKey && !geminiKey) {
             throw new Error("No API keys configured on server.");
@@ -198,7 +205,13 @@ export default async function handler(req: Request) {
 
     } catch (err: any) {
         console.error("Handler Error:", err);
-        return new Response(JSON.stringify({ error: err.message || "Server Error" }), { status: 500 });
+        return new Response(JSON.stringify({
+            error: err.message || "Server Error",
+            details: err.stack
+        }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 }
 

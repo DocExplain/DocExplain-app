@@ -45,17 +45,23 @@ You must return a JSON object with:
         }
 
         if (geminiKey) {
-            const ai = new GoogleGenAI({ apiKey: geminiKey });
-            const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
+            try {
+                const ai = new GoogleGenAI({ apiKey: geminiKey });
+                const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-            const result = await model.generateContent({
-                contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
-                generationConfig: { responseMimeType: "application/json" }
-            });
+                const result = await model.generateContent({
+                    contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+                    generationConfig: { responseMimeType: "application/json" }
+                });
 
-            return new Response(result.response.text(), {
-                headers: { 'Content-Type': 'application/json' }
-            });
+                const text = result.text || (result as any).response?.text?.() || "";
+                return new Response(text, {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (e: any) {
+                console.error("Gemini Draft Error:", e);
+                throw e;
+            }
         }
 
         throw new Error("No API keys configured");

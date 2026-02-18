@@ -38,9 +38,11 @@ workflows:
           npx cap sync ios
       - name: Increment Build Version
         script: |
-          # Bump version to Codemagic Build Number to avoid upload conflicts
-          echo "Setting version to $BUILD_NUMBER"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist
+          # Bump version to          current_build_number=$(agvtool what-version -terse)
+          # Use Codemagic BUILD_NUMBER with an offset (e.g. 100) to exceed previous builds (35)
+          new_build_number=$(($BUILD_NUMBER + 100))
+          echo "Updating build number from $current_build_number to $new_build_number"
+          agvtool new-version -all $new_build_number
       - name: Manual Certificate and Profile Installation
         script: |
           echo "🔐 Setting up Keychain and Profiles..."

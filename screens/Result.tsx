@@ -58,10 +58,11 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
           <section>
             <h3 className="font-semibold text-lg mb-3 text-gray-900 dark:text-white">{t.keyPoints}</h3>
             <ul className="space-y-3">
-              {result.keyPoints.map((point, i) => (
-                </li>
-              ))}
-                </ul>
+              <li key={i} className="flex items-start gap-3">
+                <span className="material-symbols-rounded text-primary text-[10px] mt-1.5">circle</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">{point}</span>
+              </li>
+            </ul>
           </section>
 
           {result.warning && (
@@ -89,8 +90,8 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
               className="flex items-center p-4 bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-primary dark:hover:border-primary group transition-all"
             >
               <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors ${action.type === 'pay' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 group-hover:bg-green-600 group-hover:text-white' :
-                  action.type === 'dispute' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 group-hover:bg-red-600 group-hover:text-white' :
-                    'bg-blue-50 dark:bg-blue-900/20 text-primary group-hover:bg-primary group-hover:text-white'
+                action.type === 'dispute' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 group-hover:bg-red-600 group-hover:text-white' :
+                  'bg-blue-50 dark:bg-blue-900/20 text-primary group-hover:bg-primary group-hover:text-white'
                 }`}>
                 <span className="material-symbols-rounded">
                   {action.type === 'pay' ? 'payments' :

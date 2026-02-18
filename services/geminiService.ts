@@ -8,7 +8,11 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
   const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
   try {
-    const response = await fetch(`${API_URL}/api/analyze`, {
+    const fullUrl = `${API_URL}/api/analyze`;
+    console.log(`[DEBUG] Calling API: ${fullUrl}`);
+    console.log(`[DEBUG] Context length: ${contextAndText?.length || 0}`);
+
+    const response = await fetch(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

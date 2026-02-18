@@ -161,6 +161,4 @@ export const Draft: React.FC<DraftProps> = ({ result, onBack }) => {
     </div>
   );
 };
-    </div >
-  );
 };

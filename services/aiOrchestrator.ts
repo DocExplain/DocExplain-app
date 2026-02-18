@@ -17,12 +17,12 @@ const getOpenAIClient = () => {
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
-export const explainDocument = async (contextAndText: string, fileName: string, imageBase64?: string): Promise<AnalysisResult> => {
+export const explainDocument = async (contextAndText: string, fileName: string, lang: string, imageBase64?: string): Promise<AnalysisResult> => {
     try {
         const response = await fetch(`${API_URL}/api/analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contextAndText, fileName, imageBase64 })
+            body: JSON.stringify({ contextAndText, fileName, imageBase64, lang })
         });
 
         if (!response.ok) {

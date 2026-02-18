@@ -184,7 +184,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       Jurisdiction: ${country} ${jurisdiction ? `(${jurisdiction})` : ''}
     `;
 
-    const result = await explainDocument(fullContext, docName, imageBase64);
+    const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imageBase64);
 
     incrementUsage();
     setLoading(false);

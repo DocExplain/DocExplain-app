@@ -18,8 +18,10 @@ Return a JSON object with:
   - label: short action button text (3 words max)
   - description: why this action is recommended`;
 
-async function analyzeWithGemini(contextAndText: string, fileName: string, imageBase64: string | undefined, geminiKey: string) {
+async function analyzeWithGemini(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, geminiKey: string) {
     const ai = new GoogleGenAI({ apiKey: geminiKey });
+
+    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ALL text values in the JSON output (summary, keyPoints, warning, label, description) MUST be translated to ${lang}.`;
 
     let contents: any[] = [];
 
@@ -32,14 +34,14 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
         contents = [{
             role: 'user',
             parts: [
-                { text: `${JSON_PROMPT}\n\nAdditional context: ${contextAndText || 'Analyze this document.'}` },
+                { text: `${localizedPrompt}\n\nAdditional context: ${contextAndText || 'Analyze this document.'}` },
                 { inlineData: { mimeType, data: imageBase64 } }
             ]
         }];
     } else {
         contents = [{
             role: 'user',
-            parts: [{ text: `${JSON_PROMPT}\n\nContent: "${contextAndText.substring(0, 50000)}"` }]
+            parts: [{ text: `${localizedPrompt}\n\nContent: "${contextAndText.substring(0, 50000)}"` }]
         }];
     }
 
@@ -65,6 +67,7 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
                                     label: { type: "string" },
                                     description: { type: "string" },
                                 },
+                                required: ["type", "label", "description"]
                             }
                         }
                     },
@@ -80,11 +83,13 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
     }
 }
 
-async function analyzeWithOpenAI(contextAndText: string, fileName: string, imageBase64: string | undefined, openaiKey: string) {
+async function analyzeWithOpenAI(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, openaiKey: string) {
     const openai = new OpenAI({ apiKey: openaiKey });
 
+    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ALL text values in the JSON output (summary, keyPoints, warning, label, description) MUST be translated to ${lang}.`;
+
     const messages: any[] = [
-        { role: "system", content: JSON_PROMPT }
+        { role: "system", content: localizedPrompt }
     ];
 
     if (imageBase64) {
@@ -128,7 +133,7 @@ export default async function handler(req: Request) {
     }
 
     try {
-        const { contextAndText = "", fileName = "document", imageBase64 } = await req.json();
+        const { contextAndText = "", fileName = "document", imageBase64, lang = "English" } = await req.json();
 
         if (!contextAndText && !imageBase64) {
             return new Response(JSON.stringify({ error: "No context or image provided" }), { status: 400 });
@@ -137,7 +142,7 @@ export default async function handler(req: Request) {
         const openaiKey = process.env.OPENAI_API_KEY;
         const geminiKey = process.env.GEMINI_API_KEY;
 
-        console.log(`Keys available: OpenAI: ${!!openaiKey}, Gemini: ${!!geminiKey}`);
+        console.log(`Keys available: OpenAI: ${!!openaiKey}, Gemini: ${!!geminiKey}, Lang: ${lang}`);
 
         if (!openaiKey && !geminiKey) {
             throw new Error("No API keys configured on server.");
@@ -160,12 +165,12 @@ export default async function handler(req: Request) {
         // Try Primary
         try {
             if (primaryModel === "gemini" && geminiKey) {
-                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, geminiKey);
+                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey);
             } else if (openaiKey) {
-                result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, openaiKey);
+                result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey);
             } else if (geminiKey) {
                 // Fallback if primary key missing
-                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, geminiKey);
+                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey);
             }
         } catch (e: any) {
             console.error(`Primary model (${primaryModel}) failed:`, e.message);
@@ -177,9 +182,9 @@ export default async function handler(req: Request) {
             console.log(`Attempting fallback to secondary model: ${secondaryModel}`);
             try {
                 if (secondaryModel === "gemini" && geminiKey) {
-                    result = await analyzeWithGemini(contextAndText, fileName, imageBase64, geminiKey);
+                    result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey);
                 } else if (openaiKey) {
-                    result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, openaiKey);
+                    result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey);
                 }
             } catch (e: any) {
                 console.error(`Secondary model (${secondaryModel}) failed:`, e.message);

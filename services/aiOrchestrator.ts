@@ -15,92 +15,43 @@ const getOpenAIClient = () => {
     return new OpenAI({ apiKey, dangerouslyAllowBrowser: true }); // Client-side usage for demo
 };
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 export const explainDocument = async (contextAndText: string, fileName: string, imageBase64?: string): Promise<AnalysisResult> => {
-    // If we have an image, go straight to Gemini (supports vision)
-    if (imageBase64) {
-        console.log('Image detected, using Gemini Vision.');
-        return explainGemini(contextAndText, fileName, imageBase64);
-    }
-
-    // 1. Check Length & Key Availability
-    if (contextAndText.length > LENGTH_THRESHOLD) {
-        console.log(`Document length (${contextAndText.length}) exceeds threshold. Using Gemini.`);
-        return explainGemini(contextAndText, fileName);
-    }
-
-    const openai = getOpenAIClient();
-    if (!openai) {
-        return explainGemini(contextAndText, fileName);
-    }
-
-    console.log(`Document length (${contextAndText.length}) is short. Using OpenAI.`);
-
-    // 2. OpenAI Implementation
     try {
-        const prompt = `
-      You are DocuMate, a helpful legal assistant.
-      Analyze the provided administrative or legal document.
-      
-      Return JSON:
-      {
-        "summary": "2-3 sentences plain English summary",
-        "keyPoints": ["Point 1", "Point 2", "Point 3", "Point 4", "Point 5"],
-        "warning": "Potential risks or 'null' if none"
-      }
-    `;
-
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: prompt },
-                { role: "user", content: `Document Content:\n${contextAndText.substring(0, 15000)}` } // OpenAI limit safety
-            ],
-            response_format: { type: "json_object" }
+        const response = await fetch(`${API_URL}/api/analyze`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contextAndText, fileName, imageBase64 })
         });
 
-        const content = completion.choices[0].message.content;
-        if (!content) throw new Error("No content from OpenAI");
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
 
-        const parsed = JSON.parse(content);
-        return {
-            summary: parsed.summary,
-            keyPoints: parsed.keyPoints || [],
-            warning: parsed.warning,
-            fileName,
-            timestamp: new Date().toISOString()
-        };
-
-    } catch (err) {
-        console.error("OpenAI failed, falling back to Gemini", err);
-        return explainGemini(contextAndText, fileName);
+        return await response.json();
+    } catch (err: any) {
+        console.error("Analysis failed:", err);
+        throw err;
     }
 };
 
 export const generateDraft = async (summary: string, tone: string, template: string): Promise<string> => {
-    // Drafts are usually based on summary/short context, so OpenAI is preferred for better writing style.
-    const openai = getOpenAIClient();
-    if (!openai) {
-        return draftGemini(summary, tone, template);
-    }
-
     try {
-        const prompt = `
-            Draft a response to an administrative or legal document.
-            Context: "${summary}"
-            Goal: ${template}
-            Tone: ${tone}
-            output ONLY the body.
-        `;
-
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [{ role: "user", content: prompt }]
+        const response = await fetch(`${API_URL}/api/draft`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ context: summary, tone, template })
         });
 
-        return completion.choices[0].message.content || "Could not generate draft.";
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
 
-    } catch (err) {
-        console.error("OpenAI Draft failed", err);
-        return draftGemini(summary, tone, template);
+        const data = await response.json();
+        return data.draft || "Could not generate draft.";
+    } catch (err: any) {
+        console.error("Draft failed:", err);
+        return "Error generating response.";
     }
 };

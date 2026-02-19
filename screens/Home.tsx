@@ -66,25 +66,78 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
     localStorage.setItem('documate_usage_date', new Date().toDateString());
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Helper to resize image
+  const resizeImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Max width/height 1024 to avoid payload too large
+          const MAX_SIZE = 1024;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          // Get base64 (remove prefix)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          resolve(dataUrl.split(',')[1]);
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
       event.target.value = '';
+
+      // If image, resize immediately
+      if (file.type.includes('image')) {
+        try {
+          const resizedBase64 = await resizeImage(file);
+          setCameraBase64(resizedBase64); // Use cameraBase64 to store the processable image data
+        } catch (e) {
+          console.error("Resize failed", e);
+        }
+      } else {
+        setCameraBase64(null); // Clear for non-images
+      }
     }
   };
 
   const handleScan = async () => {
     try {
       const image = await Camera.getPhoto({
-        quality: 90,
+        quality: 80,
+        width: 1024, // Limit width at source
         allowEditing: false,
         resultType: CameraResultType.Base64,
         source: CameraSource.Camera
       });
 
       if (image.base64String) {
-        // Store real base64 for Gemini Vision analysis
         setCameraBase64(image.base64String);
         setSelectedFile(null);
       }
@@ -93,16 +146,11 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
     }
   };
 
+  const [showPreview, setShowPreview] = useState(false);
+
   const checkLimits = (textLength: number): boolean => {
     if (isPro) return true;
-
-    // Check quota (Base 3 + Bonus)
-    if (dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota)) {
-      // Limit reached, but user can maybe watch an ad? 
-      // We handle this UI in the render, but here we block direct analysis
-      return false;
-    }
-
+    if (dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota)) return false;
     if (textLength > MAX_FREE_CHARS) {
       alert("This document is too long for the free plan (max 5 pages). Please upgrade to Pro.");
       onNavigate(Screen.PAYWALL);
@@ -118,59 +166,42 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
 
   const handleAnalyze = async () => {
     if (!selectedFile && !context && !cameraBase64) return;
-
-    // Pre-check limit strictly before processing
-    if (!isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota)) {
-      return;
-    }
+    if (!isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota)) return;
 
     setLoading(true);
 
     let textToAnalyze = "";
     let docName = "Context Analysis";
-    let imageBase64: string | undefined;
+    let imageBase64Data: string | undefined = cameraBase64 || undefined;
 
-    // Path 1: Camera scan — send base64 image to Gemini Vision
+    // Path 1: Camera/Image (cameraBase64 is now set for both scans and image uploads)
     if (cameraBase64) {
-      docName = `scan_${new Date().getTime()}.jpg`;
-      imageBase64 = cameraBase64;
-      textToAnalyze = context || "Analyze this scanned document.";
+      docName = selectedFile ? selectedFile.name : `scan_${new Date().getTime()}.jpg`;
+      textToAnalyze = context || "Analyze this document.";
     }
-    // Path 2: File upload
+    // Path 2: PDF/Text Upload
     else if (selectedFile) {
       docName = selectedFile.name;
       try {
-        if (selectedFile.type.includes('pdf') || selectedFile.type.includes('image')) {
-          // For PDFs and images: read as base64 for Gemini Vision
-          const base64 = await new Promise<string>((resolve, reject) => {
+        if (selectedFile.type.includes('pdf')) {
+          const base64 = await new Promise<string>((resolve) => {
             const reader = new FileReader();
-            reader.onload = (e) => {
-              const result = e.target?.result as string || "";
-              // Strip the data URL prefix (data:application/pdf;base64,)
-              const base64Data = result.split(',')[1] || result;
-              resolve(base64Data);
-            };
-            reader.onerror = reject;
+            reader.onload = (e) => resolve((e.target?.result as string).split(',')[1]);
             reader.readAsDataURL(selectedFile);
           });
-          imageBase64 = base64;
-          textToAnalyze = context || "Analyze this document.";
+          imageBase64Data = base64;
+          textToAnalyze = context || "Analyze this PDF.";
         } else {
-          // For text files: read as text
-          textToAnalyze = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target?.result as string || "");
-            reader.readAsText(selectedFile);
-          });
+          textToAnalyze = await selectedFile.text();
+          if (context) textToAnalyze = `Context: ${context}\n\nDocument Content:\n${textToAnalyze}`;
         }
       } catch (e) {
         console.error("File read error", e);
         setLoading(false);
         return;
       }
-    }
-    // Path 3: Text paste only
-    else {
+    } else {
+      // Just context
       textToAnalyze = context;
     }
 
@@ -186,31 +217,23 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         Jurisdiction: ${country === 'Other' ? (jurisdiction || 'Custom') : country} ${country !== 'Other' && jurisdiction ? `(${jurisdiction})` : ''}
       `;
 
-      const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imageBase64);
+      const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imageBase64Data);
 
-      incrementUsage();
-      setLoading(false);
-      setCameraBase64(null);
-
-      // Ad Logic
-      if (!isPro) {
-        setPendingResult(result);
-        setAdType('interstitial');
-        setShowAd(true);
-      } else {
-        onAnalysisComplete(result);
+      if (!isPro && !showAd) {
+        incrementUsage();
       }
+
+      onAnalysisComplete(result);
     } catch (error) {
-      console.error("Analysis Error:", error);
+      console.error("Analysis failed", error);
+      alert(t.analyzeError);
+    } finally {
       setLoading(false);
-      setShowDebug(true);
-      alert("Analysis failed. Please check the debug logs (bug icon).");
     }
   };
 
   const handleAdClose = () => {
     setShowAd(false);
-
     if (adType === 'interstitial' && pendingResult) {
       onAnalysisComplete(pendingResult);
       setPendingResult(null);
@@ -223,7 +246,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
     }
   };
 
-  // Debugging
+  // Debugging logic ...
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [showDebug, setShowDebug] = useState(false);
 
@@ -247,12 +270,30 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
     };
   }, []);
 
-  // Derived state for UI
   const isLimitReached = !isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota);
   const hasInput = selectedFile || context || cameraBase64;
 
   return (
     <div className="flex-1 flex flex-col px-6 pb-32 animate-fade-in relative">
+      {/* Document Preview Modal */}
+      {showPreview && cameraBase64 && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 animate-fade-in">
+          <div className="w-full max-w-lg bg-black rounded-2xl overflow-hidden relative shadow-2xl">
+            <button
+              onClick={() => setShowPreview(false)}
+              className="absolute top-4 right-4 z-10 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 backdrop-blur-md"
+            >
+              <span className="material-symbols-rounded">close</span>
+            </button>
+            <img
+              src={`data:image/jpeg;base64,${cameraBase64}`}
+              alt="Preview"
+              className="w-full h-auto max-h-[80vh] object-contain"
+            />
+          </div>
+        </div>
+      )}
+
       <AdModal
         isOpen={showAd}
         type={adType}

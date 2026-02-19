@@ -57,10 +57,12 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
         }
     };
 
+    const [viewMode, setViewMode] = useState<'analysis' | 'draft'>('analysis');
     const [selectedPath, setSelectedPath] = useState<ResponsePath>(getInitialPath());
     const [draft, setDraft] = useState('');
     const [customQuestion, setCustomQuestion] = useState('');
     const [loading, setLoading] = useState(false);
+    // Tone removed per user request, defaulting to 'Professional' internally if needed or just redundant
     const [tone, setTone] = useState<'Professional' | 'Friendly' | 'Firm'>('Professional');
 
     // Ad logic for "Fill Form"
@@ -68,14 +70,18 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     const [pendingPath, setPendingPath] = useState<ResponsePath | null>(null);
 
     useEffect(() => {
-        handleGenerate();
-    }, [selectedPath, tone]);
+        if (viewMode === 'draft') {
+            handleGenerate();
+        }
+    }, [viewMode, selectedPath]); // Trigger when entering draft mode or changing path
 
     const handleGenerate = async (query?: string) => {
         setLoading(true);
         try {
             const context = result.fullText || result.summary;
             const template = query ? `Question: ${query}` : templateMap[selectedPath];
+            // Uses 'Professional' tone by default now as buttons are removed, or we could pass 'Tutor' for forms implicitly
+            // Actually api/draft.ts logic for 'Form Filling Data' ignores tone largely and uses its own style.
             const text = await generateDraft(context, tone, template, lang);
             setDraft(text);
         } catch {
@@ -91,6 +97,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
             setShowAd(true);
         } else {
             setSelectedPath(path);
+            setViewMode('draft');
         }
     };
 
@@ -99,6 +106,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
         if (pendingPath) {
             setSelectedPath(pendingPath);
             setPendingPath(null);
+            setViewMode('draft');
         }
     };
 
@@ -118,176 +126,154 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
         alert(t.copied);
     };
 
+    const handleBack = () => {
+        if (viewMode === 'draft') {
+            setViewMode('analysis');
+        } else {
+            onBack();
+        }
+    };
+
     return (
         <div className="flex-1 flex flex-col pb-40 animate-slide-up overflow-y-auto">
             {/* Header */}
             <div className="sticky top-0 z-20 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
-                <button onClick={onBack} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <button onClick={handleBack} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                     <span className="material-symbols-rounded text-gray-900 dark:text-white">arrow_back</span>
                 </button>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">{t.draftResponse}</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">
+                    {viewMode === 'analysis' ? 'Analysis Result' : t.draftResponse}
+                </h2>
             </div>
 
             <div className="p-4 space-y-6">
-                {/* Original Document Card */}
-                <div className="rounded-xl bg-slate-900 shadow-lg overflow-hidden">
-                    <div className="p-5">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="material-symbols-rounded text-primary text-sm">description</span>
-                            <p className="text-primary text-xs font-bold uppercase tracking-wider">Original Document</p>
-                        </div>
-                        <p className="text-white text-lg font-bold leading-tight">{result.fileName.replace(/\.\w+$/, '').replace(/[-_]/g, ' ')}</p>
-                        <p className="text-slate-400 text-xs mt-1">Received: {formatDate()} • <span className="text-amber-400 font-medium">Urgent</span></p>
-                    </div>
-                </div>
+                {/* Original Document Card - Always Visible or just in Analysis? User said "explain content THEN deepen" */}
+                {viewMode === 'analysis' && (
+                    <>
+                        <div className="rounded-xl bg-slate-900 shadow-lg overflow-hidden">
+                            <div className="p-5">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="material-symbols-rounded text-primary text-sm">description</span>
+                                    <p className="text-primary text-xs font-bold uppercase tracking-wider">Document Analysis</p>
+                                </div>
+                                <h3 className="text-white text-lg font-bold leading-tight mb-2">{result.fileName.replace(/\.\w+$/, '').replace(/[-_]/g, ' ')}</h3>
 
-                {/* Choose a Response Path */}
-                <div>
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.chooseResponse}</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                        {responsePaths.map((path) => (
-                            <button
-                                key={path.id}
-                                onClick={() => onSelectPath(path.id)}
-                                className={`relative flex flex-col items-start p-4 rounded-xl border-2 transition-all duration-200 ${selectedPath === path.id
-                                    ? 'border-primary bg-blue-50 dark:bg-blue-900/20 shadow-md shadow-blue-500/10'
-                                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark hover:border-gray-300 dark:hover:border-gray-600'
-                                    }`}
-                            >
-                                {selectedPath === path.id && (
-                                    <div className="absolute top-2 right-2">
-                                        <span className="material-symbols-rounded text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                {/* Summary Section */}
+                                <div className="bg-slate-800/50 rounded-lg p-3 mb-3">
+                                    <p className="text-gray-300 text-sm leading-relaxed">
+                                        {result.summary || "No summary available."}
+                                    </p>
+                                </div>
+
+                                {/* Key Points */}
+                                {result.keyPoints && result.keyPoints.length > 0 && (
+                                    <div className="space-y-2">
+                                        {result.keyPoints.slice(0, 3).map((point, i) => (
+                                            <div key={i} className="flex gap-2 items-start">
+                                                <span className="text-primary mt-1">•</span>
+                                                <p className="text-slate-300 text-xs">{point}</p>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${selectedPath === path.id
-                                    ? 'bg-primary text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-                                    }`}>
-                                    <span className="material-symbols-rounded">{path.icon}</span>
-                                </div>
-                                <p className={`text-sm font-semibold leading-tight ${selectedPath === path.id ? 'text-primary' : 'text-gray-900 dark:text-white'
-                                    }`}>{path.label}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{path.subtitle}</p>
-                            </button>
-                        ))}
-                    </div>
-                </div>
 
-                {/* Draft Editor Section */}
-                <div>
-                    <div className="flex items-center justify-between mb-3 px-1">
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Draft Editor</h3>
-                        <div className="flex items-center gap-1.5 text-primary text-xs font-medium">
-                            <span className="material-symbols-rounded text-sm">auto_awesome</span>
-                            AI Generated
-                        </div>
-                    </div>
-
-                    {loading ? (
-                        <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center min-h-[200px]">
-                            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.generating}</p>
-                        </div>
-                    ) : (
-                        <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-800">
-                                <p className="text-sm text-gray-900 dark:text-white font-medium">
-                                    Subject: {responsePaths.find(p => p.id === selectedPath)?.label} regarding {result.fileName.replace(/\.\w+$/, '').replace(/[-_]/g, ' ')}
-                                </p>
+                                <p className="text-slate-500 text-[10px] mt-4 text-right">Analyzed on {formatDate()}</p>
                             </div>
-                            <textarea
-                                value={draft}
-                                onChange={(e) => setDraft(e.target.value)}
-                                className="w-full min-h-[180px] p-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent placeholder-gray-400 focus:outline-none resize-none"
-                                spellCheck={false}
-                            />
                         </div>
-                    )}
 
-                    {/* Ask a Question Section */}
-                    <div className="mt-6">
-                        <form onSubmit={handleAskQuestion} className="flex gap-2">
-                            <input
-                                type="text"
-                                value={customQuestion}
-                                onChange={(e) => setCustomQuestion(e.target.value)}
-                                placeholder="Posez une question sur le document..."
-                                className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors"
-                            />
-                            <button
-                                type="submit"
-                                disabled={loading || !customQuestion.trim()}
-                                className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50"
-                            >
-                                <span className="material-symbols-rounded">send</span>
-                            </button>
-                        </form>
-                    </div>
+                        {/* Choose a Response Path - Only in Analysis Mode */}
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.chooseResponse}</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                {responsePaths.map((path) => (
+                                    <button
+                                        key={path.id}
+                                        onClick={() => onSelectPath(path.id)}
+                                        className="relative flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all duration-200"
+                                    >
+                                        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                                            <span className="material-symbols-rounded">{path.icon}</span>
+                                        </div>
+                                        <p className="text-sm font-semibold leading-tight text-gray-900 dark:text-white">{path.label}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{path.subtitle}</p>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                )}
 
-                    {/* Quick Edit Toolbar */}
-                    <div className="flex flex-col items-center mt-6">
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2">
-                            {selectedPath === 'fill' ? 'Guidance Level' : 'Tone & Tools'}
-                        </p>
-                        <div className="inline-flex items-center bg-slate-900 rounded-full px-2 py-1.5 gap-1 shadow-lg">
-                            <button
-                                onClick={() => setTone('Professional')}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${tone === 'Professional' ? 'bg-white text-slate-900' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                <span className="material-symbols-rounded text-lg">
-                                    {selectedPath === 'fill' ? 'short_text' : 'tune'}
-                                </span>
-                                <span className="text-[10px] font-bold uppercase tracking-tight">
-                                    {selectedPath === 'fill' ? t.toneConcise : 'Serious'}
-                                </span>
-                            </button>
-                            <button
-                                onClick={() => setTone('Friendly')}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${tone === 'Friendly' ? 'bg-white text-slate-900' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                <span className="material-symbols-rounded text-lg">
-                                    {selectedPath === 'fill' ? 'school' : 'equalizer'}
-                                </span>
-                                <span className="text-[10px] font-bold uppercase tracking-tight">
-                                    {selectedPath === 'fill' ? t.toneTutor : 'Friendly'}
-                                </span>
-                            </button>
-                            <button
-                                onClick={() => setTone('Firm')}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${tone === 'Firm' ? 'bg-white text-slate-900' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                <span className="material-symbols-rounded text-lg">
-                                    {selectedPath === 'fill' ? 'list_alt' : 'settings'}
-                                </span>
-                                <span className="text-[10px] font-bold uppercase tracking-tight">
-                                    {selectedPath === 'fill' ? t.toneDetailed : 'Direct'}
-                                </span>
-                            </button>
-                            <div className="w-px h-4 bg-gray-700 mx-1"></div>
-                            <button
-                                onClick={() => handleGenerate()}
-                                className="p-2 rounded-full text-primary hover:bg-gray-700 transition-colors"
-                                title="Regenerate"
-                            >
-                                <span className="material-symbols-rounded text-lg">refresh</span>
-                            </button>
+                {/* Draft Editor Section - Only in Draft Mode */}
+                {viewMode === 'draft' && (
+                    <div className="animate-slide-up">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                {selectedPath === 'fill' ? 'Guidance & Tutorial' : 'Draft Editor'}
+                            </h3>
+                            <div className="flex items-center gap-1.5 text-primary text-xs font-medium">
+                                <span className="material-symbols-rounded text-sm">auto_awesome</span>
+                                AI Generated
+                            </div>
+                        </div>
+
+                        {loading ? (
+                            <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center min-h-[200px]">
+                                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{t.generating}</p>
+                            </div>
+                        ) : (
+                            <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                                <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+                                    <p className="text-sm text-gray-900 dark:text-white font-medium">
+                                        Topic: {responsePaths.find(p => p.id === selectedPath)?.label}
+                                    </p>
+                                </div>
+                                <textarea
+                                    value={draft}
+                                    onChange={(e) => setDraft(e.target.value)}
+                                    className="w-full min-h-[300px] p-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent placeholder-gray-400 focus:outline-none resize-none"
+                                    spellCheck={false}
+                                />
+                            </div>
+                        )}
+
+                        {/* Ask a Question Section - Keeps this available for "refaire une analyse" or clarification */}
+                        <div className="mt-4">
+                            <form onSubmit={handleAskQuestion} className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={customQuestion}
+                                    onChange={(e) => setCustomQuestion(e.target.value)}
+                                    placeholder="Posez une question sur le document..."
+                                    className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={loading || !customQuestion.trim()}
+                                    className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20"
+                                >
+                                    <span className="material-symbols-rounded">send</span>
+                                </button>
+                            </form>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
 
-            {/* Fixed Bottom Bar - Removed Preview PDF button per user request */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 pb-6 z-40">
-                <div className="max-w-md mx-auto">
-                    <button
-                        onClick={handleCopy}
-                        className="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
-                    >
-                        {t.copy}
-                        <span className="material-symbols-rounded text-lg">content_copy</span>
-                    </button>
+            {/* Fixed Bottom Bar - Only show Copy/Action in Draft Mode */}
+            {viewMode === 'draft' && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 pb-6 z-40">
+                    <div className="max-w-md mx-auto">
+                        <button
+                            onClick={handleCopy}
+                            className="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                            {t.copy}
+                            <span className="material-symbols-rounded text-lg">content_copy</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {showAd && (
                 <AdModal

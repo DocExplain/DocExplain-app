@@ -1,0 +1,33 @@
+[VOTRE NOM]
+[VOTRE ADRESSE]
+[NPA VILLE]
+N° Assuré : 123.456.789
+
+À :
+Assura-Maladie SA
+Case postale
+1052 Le Mont-sur-Lausanne
+
+Lieu, Date : [Lieu], le [Date]
+
+OBJET : RÉSILIATION DE L'ASSURANCE MALADIE DE BASE
+
+Madame, Monsieur,
+
+Par la présente, je vous informe de ma décision de résilier mon assurance obligatoire des soins (LAMal) auprès de votre caisse pour le 31 décembre prochain.
+
+Cette résiliation concerne :
+- [Moi-même]
+- [Conjoint/Enfant si applicable]
+
+Je suis affilié(e) à une nouvelle caisse maladie à compter du 1er janvier prochain :
+[Nom de la nouvelle assurance]
+[Adresse de la nouvelle assurance]
+
+Vous recevrez prochainement l'attestation d'affiliation de mon nouvel assureur confirmant que je suis bien assuré(e) sans interruption.
+
+Je vous prie de bien vouloir me confirmer la réception de ce courrier et la prise en compte de ma résiliation.
+
+Dans l'attente de votre confirmation, je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.
+
+[SIGNATURE]

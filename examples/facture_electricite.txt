@@ -1,0 +1,35 @@
+FACTURE D'ÉLECTRICITÉ - ÉNERGIE SA
+
+Destinataire :
+Monsieur Nicolas Tuor
+Rue des Alpes 15
+1000 Lausanne
+
+N° Client : CH-8829-2292
+N° Facture : 2025-04-12938
+Date : 15.04.2025
+
+Période de facturation : 01.01.2025 - 31.03.2025
+
+DÉTAILS DE LA CONSOMMATION
+--------------------------------------------------
+Produit                  Quantité      Prix unitaire     Total
+Électricité Bleue (kWh)  850 kWh       0.25 CHF          212.50 CHF
+Acheminement (kWh)       850 kWh       0.12 CHF          102.00 CHF
+Redevance compteur       1 pce         25.00 CHF          25.00 CHF
+Taxes fédérales / PRC    850 kWh       0.02 CHF           17.00 CHF
+
+Sous-total HT                                            356.50 CHF
+TVA (8.1%)                                                28.88 CHF
+--------------------------------------------------
+TOTAL À PAYER                                            385.40 CHF
+--------------------------------------------------
+
+Délai de paiement : 30.04.2025
+
+BVR (Bulletin de Versement Orange)
+Compte : 01-23456-7
+Montant : 385.40
+Référence : 8292 2920 0000 1293 8888 2
+Payable à : ÉNERGIE SA, 1000 Lausanne
+Versé par : Tuor Nicolas, Lausanne

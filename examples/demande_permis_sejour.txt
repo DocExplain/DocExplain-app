@@ -1,0 +1,38 @@
+DEMANDE DE TITRE DE SÉJOUR
+
+Autorité compétente : Service de la population (SPOP)
+
+TYPE DE DEMANDE
+[ ] Premier octroi
+[ ] Renouvellement
+[ ] Changement de type (L -> B / B -> C)
+
+IDENTITÉ DU REQUÉRANT
+Nom de famille : ________________________
+Prénoms : ______________________________
+Date de naissance : __/__/____
+Nationalité : __________________________
+État civil : Célibataire / Marié(e) / Divorcé(e)
+Adresse actuelle : ______________________________________
+
+MOTIF DU SÉJOUR
+[ ] Activité lucrative (travail) - Employeur : __________________
+[ ] Regroupement familial - Rejoignant : _______________________
+[ ] Études - Établissement : __________________________________
+[ ] Sans activité lucrative (rentier)
+
+ANTÉCÉDENTS
+Avez-vous déjà fait l'objet d'une condamnation pénale ?
+[ ] OUI    [ ] NON
+Si oui, précisez : ____________________________________________
+
+Avez-vous bénéficié de l'aide sociale ces 3 dernières années ?
+[ ] OUI    [ ] NON
+
+DOCUMENTS À JOINDRE
+- Copie du passeport
+- Copie du contrat de travail ou attestation d'inscription (école)
+- Extrait du casier judiciaire (si nouveau)
+- 2 photos passeport
+
+Lieu et date : ____________________   Signature : ____________________

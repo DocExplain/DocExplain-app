@@ -51,6 +51,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
 
     const [selectedPath, setSelectedPath] = useState<ResponsePath>(getInitialPath());
     const [draft, setDraft] = useState('');
+    const [customQuestion, setCustomQuestion] = useState('');
     const [loading, setLoading] = useState(false);
     const [tone, setTone] = useState<'Professional' | 'Friendly' | 'Firm'>('Professional');
 
@@ -58,16 +59,23 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
         handleGenerate();
     }, [selectedPath, tone]);
 
-    const handleGenerate = async () => {
+    const handleGenerate = async (query?: string) => {
         setLoading(true);
         try {
             const context = result.fullText || result.summary;
-            const text = await generateDraft(context, tone, templateMap[selectedPath], lang);
+            const template = query ? `Question: ${query}` : templateMap[selectedPath];
+            const text = await generateDraft(context, tone, template, lang);
             setDraft(text);
         } catch {
             setDraft('Could not generate draft. Please try again.');
         }
         setLoading(false);
+    };
+
+    const handleAskQuestion = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!customQuestion.trim()) return;
+        handleGenerate(customQuestion);
     };
 
     const formatDate = () => {
@@ -173,33 +181,54 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                         </div>
                     )}
 
+                    {/* Ask a Question Section */}
+                    <div className="mt-6">
+                        <form onSubmit={handleAskQuestion} className="flex gap-2">
+                            <input
+                                type="text"
+                                value={customQuestion}
+                                onChange={(e) => setCustomQuestion(e.target.value)}
+                                placeholder="Posez une question sur le document..."
+                                className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors"
+                            />
+                            <button
+                                type="submit"
+                                disabled={loading || !customQuestion.trim()}
+                                className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50"
+                            >
+                                <span className="material-symbols-rounded">send</span>
+                            </button>
+                        </form>
+                    </div>
+
                     {/* Quick Edit Toolbar */}
-                    <div className="flex items-center justify-center mt-3">
+                    <div className="flex flex-col items-center mt-6">
+                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2">Tone & Tools</p>
                         <div className="inline-flex items-center bg-slate-900 rounded-full px-2 py-1.5 gap-1 shadow-lg">
-                            <button className="px-3 py-1.5 rounded-full bg-white text-slate-900 text-xs font-semibold">Quick Edit</button>
                             <button
                                 onClick={() => setTone('Professional')}
-                                className={`p-2 rounded-full transition-colors ${tone === 'Professional' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
-                                title="Professional"
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${tone === 'Professional' ? 'bg-white text-slate-900' : 'text-gray-400 hover:text-white'}`}
                             >
                                 <span className="material-symbols-rounded text-lg">tune</span>
+                                <span className="text-[10px] font-bold uppercase tracking-tight">Serious</span>
                             </button>
                             <button
                                 onClick={() => setTone('Friendly')}
-                                className={`p-2 rounded-full transition-colors ${tone === 'Friendly' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
-                                title="Friendly"
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${tone === 'Friendly' ? 'bg-white text-slate-900' : 'text-gray-400 hover:text-white'}`}
                             >
                                 <span className="material-symbols-rounded text-lg">equalizer</span>
+                                <span className="text-[10px] font-bold uppercase tracking-tight">Friendly</span>
                             </button>
                             <button
                                 onClick={() => setTone('Firm')}
-                                className={`p-2 rounded-full transition-colors ${tone === 'Firm' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
-                                title="Firm"
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${tone === 'Firm' ? 'bg-white text-slate-900' : 'text-gray-400 hover:text-white'}`}
                             >
                                 <span className="material-symbols-rounded text-lg">settings</span>
+                                <span className="text-[10px] font-bold uppercase tracking-tight">Direct</span>
                             </button>
+                            <div className="w-px h-4 bg-gray-700 mx-1"></div>
                             <button
-                                onClick={handleGenerate}
+                                onClick={() => handleGenerate()}
                                 className="p-2 rounded-full text-primary hover:bg-gray-700 transition-colors"
                                 title="Regenerate"
                             >

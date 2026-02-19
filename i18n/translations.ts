@@ -48,6 +48,9 @@ export interface TranslationStrings {
     // Advice labels
     actionPay: string; actionFill: string; actionDispute: string; actionIgnore: string;
     targetLang: string; simpleExplanation: string;
+    // New
+    countryOther: string; enterCountry: string;
+    contextPlaceholderFile: string; contextPlaceholderPaste: string; jurisdictionPlaceholder: string;
 }
 
 const en: TranslationStrings = {
@@ -88,6 +91,10 @@ const en: TranslationStrings = {
     catBill: "Invoice / Bill", catForm: "Form", catScam: "Potential Scam", catLegal: "Legal Document",
     actionPay: "Pay Bill", actionFill: "How to Fill", actionDispute: "Contest", actionIgnore: "Ignore / Safe",
     targetLang: "Reply Language", simpleExplanation: "What this means for you",
+    countryOther: "Other", enterCountry: "Enter your country",
+    contextPlaceholderFile: "e.g. Is the indemnity clause standard?",
+    contextPlaceholderPaste: "Paste contract text here...",
+    jurisdictionPlaceholder: "e.g. Canton of Zurich, California, etc.",
 };
 
 const fr: TranslationStrings = {
@@ -128,6 +135,10 @@ const fr: TranslationStrings = {
     catBill: "Facture", catForm: "Formulaire", catScam: "Arnaque Potentielle", catLegal: "Document Juridique",
     actionPay: "Payer la facture", actionFill: "Comment remplir", actionDispute: "Contester", actionIgnore: "Ignorer / Sécurisé",
     targetLang: "Langue de réponse", simpleExplanation: "Ce que cela signifie pour vous",
+    countryOther: "Autre", enterCountry: "Entrez votre pays",
+    contextPlaceholderFile: "ex. La clause d'indemnisation est-elle standard ?",
+    contextPlaceholderPaste: "Collez le texte du contrat ici...",
+    jurisdictionPlaceholder: "ex. Canton de Zurich, Californie...",
 };
 
 const de: TranslationStrings = {
@@ -162,8 +173,16 @@ const de: TranslationStrings = {
     perWeek: "/ Woche", perMonth: "/ Monat", perYear: "/ Jahr",
     subRenew: "Automatische Verlängerung, wenn nicht 24h vorher deaktiviert.",
     terms: "AGB", privacy: "Datenschutz", startTrial: "Gratis testen", cancelAnytime: "Jederzeit kündbar.",
-    noHistory: "Noch kein Verlauf", analyzeFirst: "Analysieren Sie ein Dokument.",
+    noHistory: "Noch kein Verlauf", analyzeFirst: "Analysieren Sie ein Dokument, um es hier zu sehen.",
     language: "Sprache", country: "Land",
+    catBill: "Rechnung", catForm: "Formular", catScam: "Möglicher Betrug", catLegal: "Rechtsdokument",
+    actionPay: "Rechnung bezahlen", actionFill: "Ausfüllhilfe", actionDispute: "Anfechten", actionIgnore: "Ignorieren / Sicher",
+    fillForm: "Formular ausfüllen", fillFormSub: "Daten extrahieren",
+    targetLang: "Antwortsprache", simpleExplanation: "Was das für Sie bedeutet",
+    countryOther: "Andere", enterCountry: "Land eingeben",
+    contextPlaceholderFile: "z.B. Ist die Entschädigungsklausel Standard?",
+    contextPlaceholderPaste: "Vertragstext hier einfügen...",
+    jurisdictionPlaceholder: "z.B. Kanton Zürich, Kalifornien...",
 };
 
 const es: TranslationStrings = {
@@ -200,6 +219,14 @@ const es: TranslationStrings = {
     terms: "Términos", privacy: "Privacidad", startTrial: "Prueba gratis", cancelAnytime: "Cancela cuando quieras.",
     noHistory: "Sin historial", analyzeFirst: "Analiza un documento para verlo aquí.",
     language: "Idioma", country: "País",
+    catBill: "Factura", catForm: "Formulario", catScam: "Estafa potencial", catLegal: "Documento legal",
+    actionPay: "Pagar factura", actionFill: "Cómo rellenar", actionDispute: "Disputar", actionIgnore: "Ignorar / Seguro",
+    fillForm: "Rellenar formulario", fillFormSub: "Extraer datos",
+    targetLang: "Idioma de respuesta", simpleExplanation: "Qué significa para ti",
+    countryOther: "Otro", enterCountry: "Introduzca su país",
+    contextPlaceholderFile: "ej. ¿Es estándar la cláusula de indemnización?",
+    contextPlaceholderPaste: "Pegue el texto del contrato aquí...",
+    jurisdictionPlaceholder: "ej. Cantón de Zúrich, California...",
 };
 
 const it: TranslationStrings = {
@@ -236,6 +263,14 @@ const it: TranslationStrings = {
     terms: "Termini", privacy: "Privacy", startTrial: "Prova gratuita", cancelAnytime: "Annulla in qualsiasi momento.",
     noHistory: "Nessuna cronologia", analyzeFirst: "Analizza un documento per vederlo qui.",
     language: "Lingua", country: "Paese",
+    catBill: "Fattura", catForm: "Modulo", catScam: "Potenziale truffa", catLegal: "Documento legale",
+    actionPay: "Paga bolletta", actionFill: "Come compilare", actionDispute: "Contesta", actionIgnore: "Ignora / Sicuro",
+    fillForm: "Compilare modulo", fillFormSub: "Estrarre dati",
+    targetLang: "Lingua di risposta", simpleExplanation: "Cosa significa per te",
+    countryOther: "Altro", enterCountry: "Inserisci il tuo paese",
+    contextPlaceholderFile: "es. La clausola di indennizzo è standard?",
+    contextPlaceholderPaste: "Incolla qui il testo del contratto...",
+    jurisdictionPlaceholder: "es. Cantone di Zurigo, California...",
 };
 
 const pt: TranslationStrings = {
@@ -272,6 +307,14 @@ const pt: TranslationStrings = {
     terms: "Termos", privacy: "Privacidade", startTrial: "Teste grátis", cancelAnytime: "Cancele quando quiser.",
     noHistory: "Sem histórico", analyzeFirst: "Analise um documento para vê-lo aqui.",
     language: "Idioma", country: "País",
+    catBill: "Fatura", catForm: "Formulário", catScam: "Potencial fraude", catLegal: "Documento legal",
+    actionPay: "Pagar conta", actionFill: "Como preencher", actionDispute: "Contestar", actionIgnore: "Ignorar / Seguro",
+    fillForm: "Preencher formulário", fillFormSub: "Extrair dados",
+    targetLang: "Idioma de resposta", simpleExplanation: "O que isso significa",
+    countryOther: "Outro", enterCountry: "Digite seu país",
+    contextPlaceholderFile: "ex. A cláusula de indenização é padrão?",
+    contextPlaceholderPaste: "Cole o texto do contrato aqui...",
+    jurisdictionPlaceholder: "ex. Cantão de Zurique, Califórnia...",
 };
 
 const zh: TranslationStrings = {
@@ -308,6 +351,14 @@ const zh: TranslationStrings = {
     terms: "服务条款", privacy: "隐私政策", startTrial: "开始免费试用", cancelAnytime: "随时取消。",
     noHistory: "暂无历史", analyzeFirst: "分析文档后将在此显示。",
     language: "语言", country: "国家",
+    catBill: "账单", catForm: "表格", catScam: "潜在诈骗", catLegal: "法律文件",
+    actionPay: "支付账单", actionFill: "如何填写", actionDispute: "争议", actionIgnore: "忽略 / 安全",
+    fillForm: "填写表格", fillFormSub: "提取数据",
+    targetLang: "回复语言", simpleExplanation: "这对您意味着什么",
+    countryOther: "其他", enterCountry: "输入您的国家",
+    contextPlaceholderFile: "例如：赔偿条款是否标准？",
+    contextPlaceholderPaste: "在此粘贴合同文本...",
+    jurisdictionPlaceholder: "例如：苏黎世州，加利福尼亚...",
 };
 
 const hi: TranslationStrings = {
@@ -344,6 +395,14 @@ const hi: TranslationStrings = {
     terms: "शर्तें", privacy: "गोपनीयता", startTrial: "नि:शुल्क परीक्षण", cancelAnytime: "कभी भी रद्द करें।",
     noHistory: "अभी कोई इतिहास नहीं", analyzeFirst: "यहाँ देखने के लिए एक दस्तावेज़ का विश्लेषण करें।",
     language: "भाषा", country: "देश",
+    catBill: "बिल", catForm: "फॉर्म", catScam: "संभावित घोटाला", catLegal: "कानूनी दस्तावेज",
+    actionPay: "बिल भरें", actionFill: "कैसे भरें", actionDispute: "विवाद", actionIgnore: "अनदेखा करें / सुरक्षित",
+    fillForm: "फॉर्म भरें", fillFormSub: "डेटा निकालें",
+    targetLang: "उत्तर भाषा", simpleExplanation: "इसका आपके लिए क्या अर्थ है",
+    countryOther: "अन्य", enterCountry: "अपना देश दर्ज करें",
+    contextPlaceholderFile: "उदा. क्या क्षतिपूर्ति खंड मानक है?",
+    contextPlaceholderPaste: "अनुबंध पाठ यहाँ चिपकाएँ...",
+    jurisdictionPlaceholder: "उदा. ज्यूरिख का कैंटन, कैलिफोर्निया...",
 };
 
 const ar: TranslationStrings = {
@@ -380,6 +439,14 @@ const ar: TranslationStrings = {
     terms: "الشروط", privacy: "الخصوصية", startTrial: "ابدأ تجربة مجانية", cancelAnytime: "إلغاء في أي وقت.",
     noHistory: "لا سجل بعد", analyzeFirst: "حلّل مستندًا لعرضه هنا.",
     language: "اللغة", country: "البلد",
+    catBill: "فاتورة", catForm: "نموذج", catScam: "احتيال محتمل", catLegal: "وثيقة قانونية",
+    actionPay: "دفع الفاتورة", actionFill: "كيفية الملء", actionDispute: "نازع", actionIgnore: "تجاهل / آمن",
+    fillForm: "ملء النموذج", fillFormSub: "استخراج البيانات",
+    targetLang: "لغة الرد", simpleExplanation: "ما يعنيه هذا بالنسبة لك",
+    countryOther: "أخرى", enterCountry: "أدخل بلدك",
+    contextPlaceholderFile: "مثال: هل شرط التعويض قياسي؟",
+    contextPlaceholderPaste: "الصق نص العقد هنا...",
+    jurisdictionPlaceholder: "مثال: كانتون زيورخ، كاليفورنيا...",
 };
 
 const ru: TranslationStrings = {
@@ -416,6 +483,14 @@ const ru: TranslationStrings = {
     terms: "Условия", privacy: "Конфиденциальность", startTrial: "Бесплатная пробная версия", cancelAnytime: "Отмена в любое время.",
     noHistory: "История пуста", analyzeFirst: "Проанализируйте документ.",
     language: "Язык", country: "Страна",
+    catBill: "Счет", catForm: "Форма", catScam: "Возможное мошенничество", catLegal: "Правовой документ",
+    actionPay: "Оплатить счет", actionFill: "Как заполнить", actionDispute: "Оспорить", actionIgnore: "Игнорировать / Безопасно",
+    fillForm: "Заполнить форму", fillFormSub: "Извлечь данные",
+    targetLang: "Язык ответа", simpleExplanation: "Что это значит для вас",
+    countryOther: "Другое", enterCountry: "Введите вашу страну",
+    contextPlaceholderFile: "напр. Является ли пункт о возмещении стандартным?",
+    contextPlaceholderPaste: "Вставьте текст договора здесь...",
+    jurisdictionPlaceholder: "напр. Кантон Цюрих, Калифорния...",
 };
 
 const bn: TranslationStrings = {
@@ -452,6 +527,14 @@ const bn: TranslationStrings = {
     terms: "শর্তাবলী", privacy: "গোপনীয়তা", startTrial: "ফ্রি ট্রায়াল", cancelAnytime: "যেকোনো সময় বাতিল।",
     noHistory: "কোনো ইতিহাস নেই", analyzeFirst: "এখানে দেখতে একটি নথি বিশ্লেষণ করুন।",
     language: "ভাষা", country: "দেশ",
+    catBill: "বিল", catForm: "ফর্ম", catScam: "সম্ভাব্য প্রতারণা", catLegal: "আইনি নথি",
+    actionPay: "বিল পরিশোধ", actionFill: "কিভাবে পূরণ করবেন", actionDispute: "বিতর্ক", actionIgnore: "উপেক্ষা / নিরাপদ",
+    fillForm: "ফর্ম পূরণ", fillFormSub: "ডেটা বের করুন",
+    targetLang: "উত্তরের ভাষা", simpleExplanation: "আপনার জন্য এর অর্থ কি",
+    countryOther: "অন্যান্য", enterCountry: "আপনার দেশ লিখুন",
+    contextPlaceholderFile: "যেমন: ক্ষতিপূরণ ধারা কি মানসম্মত?",
+    contextPlaceholderPaste: "চুক্তি পাঠ্য এখানে পেস্ট করুন...",
+    jurisdictionPlaceholder: "যেমন: জুরিখ ক্যান্টন, ক্যালিফোর্নিয়া...",
 };
 
 export const translations: Record<SupportedLang, TranslationStrings> = {

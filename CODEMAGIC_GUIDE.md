@@ -76,7 +76,7 @@ C'est la partie la plus "technique". Suis bien les étapes.
 
 ---
 
-## Étape 3 : Déclarer l'Export Compliance (Automatique) 🔐
+## Étape 4 : Déclarer l'Export Compliance (Automatique) 🔐
 
 Apple demande si ton app utilise du chiffrement nécessitant une autorisation d'export. Pour la plupart des apps (qui n'utilisent que HTTPS), la réponse est **non**.
 
@@ -93,45 +93,27 @@ Cela indique à Apple que ton app n'utilise que du chiffrement standard et évit
 
 ---
 
-## Étape 3 bis : Configuration TestFlight (Premier Lancement) ⚠️
+## Étape 5 : Migration ou Nouvelle App (DocExplain-app) 🆕
 
-Si tu utilises l'automatisation vers TestFlight (activée dans notre `codemagic.yaml`), les premiers builds peuvent échouer avec des erreurs de configuration manquante.
+Si tu crées une nouvelle application (ex: migration vers `DocExplain-app`), voici les réglages spécifiques :
 
-**C'est normal !** Apple exige que tu remplisses manuellement ces infos une seule fois :
+1.  **Créer l'app** : Add Application > GitHub > `DocExplain/DocExplain-app`.
+2.  **Variables d'Environnement (Obligatoires)** :
+    
+    **Nom du groupe recommandé :** `ios_credentials`
+    *(Si tu crées ce groupe dans tes paramètres d'équipe, tu pourras l'importer en un clic !)*
 
-1. Va sur [App Store Connect](https://appstoreconnect.apple.com).
-2. Clique sur ton app **DocuMate**.
-3. Va dans l'onglet **TestFlight**.
-4. Dans le menu de gauche, sous "General Information", remplis **2 sections** :
+    **Liste des variables :**
+    - `VITE_API_URL` (Ton URL Vercel de prod)
+    - `CM_CERTIFICATE` (Fichier .p12)
+    - `CM_CERTIFICATE_PASSWORD` (Mot de passe du .p12)
+    - `CM_PROVISIONING_PROFILE` (Fichier .mobileprovision)
+    - `APP_STORE_CONNECT_PRIVATE_KEY` (Fichier .p8 pour upload TestFlight)
+    - `APP_STORE_CONNECT_KEY_IDENTIFIER` (ID de la clé)
+    - `APP_STORE_CONNECT_ISSUER_ID` (ID de l'émetteur)
 
-   **a) Test Information** :
-   - **Feedback Email** (Ton email).
-   - **Beta App Review Information** (Tes coordonnées : Nom, Tel, Email).
-   
-   **b) App Information** (juste en dessous dans le menu) :
-   - **Beta App Description** : Une courte description de ton app en anglais (par exemple : *"DocuMate AI helps you scan, organize and analyze documents using artificial intelligence."*).
-   - Sauvegarde les deux sections.
-
-Une fois fait, tu peux relancer le build sur Codemagic !
-
----
-
-## Étape 4 : Le Build et le Déploiement 🚀
-
-### Option A : Déploiement Automatique (Recommandé)
-Notre fichier `codemagic.yaml` est configuré pour envoyer automatiquement l'app sur TestFlight.
-- Si le build réussit (coche verte ✅ sur Codemagic), tu recevras un email d'Apple.
-- L'app sera dispo dans l'app TestFlight sur ton iPhone.
-
-### Option B : Déploiement Manuel (En cas d'erreur)
-Si l'envoi automatique échoue mais que le build a réussi (tu as un fichier `.ipa`) :
-
-1. Sur Codemagic, télécharge le fichier **`.ipa`** dans la section "Artifacts".
-2. Télécharge l'app **Transporter** sur le Mac App Store (sur ton Mac).
-3. Connecte-toi avec ton compte Apple ID.
-4. Glisse le fichier `.ipa` dans Transporter et clique sur **Deliver**.
-
-C'est fini ! L'app sera dispo dans TestFlight / App Store Connect sous 30min après l'envoi. 🎉
+3.  **Vérification** :
+    - Assure-toi que les certificats sont bien disponibles (soit via le groupe importé, soit ré-uploadés).
 
 ---
 
@@ -159,5 +141,5 @@ C'est fini ! L'app sera dispo dans TestFlight / App Store Connect sous 30min apr
 
 ### 🔄 Le build n'apparaît pas dans Codemagic
 **Cause :** Le build n'a pas été déclenché automatiquement.  
-**Solution :** Vérifie que tu as bien pushé sur la branche `app` (configurée dans `codemagic.yaml` ligne 24).
+**Solution :** Vérifie que tu as bien pushé sur la branche `main` (configurée dans `codemagic.yaml`).
 

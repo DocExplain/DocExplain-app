@@ -1,7 +1,7 @@
 
 import { AnalysisResult } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = import.meta.env.VITE_API_URL || 'https://doc-explain-app.vercel.app';
 
 export const explainDocument = async (contextAndText: string, fileName: string, imageBase64?: string): Promise<AnalysisResult> => {
   const controller = new AbortController();

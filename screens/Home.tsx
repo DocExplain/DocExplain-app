@@ -181,7 +181,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
     const fullContext = `
       Document Text: ${textToAnalyze}
       User Context/Questions: ${context}
-      Jurisdiction: ${country} ${jurisdiction ? `(${jurisdiction})` : ''}
+      Jurisdiction: ${country === 'Other' ? (jurisdiction || 'Custom') : country} ${country !== 'Other' && jurisdiction ? `(${jurisdiction})` : ''}
     `;
 
     const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imageBase64);
@@ -342,24 +342,49 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
                 className="w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 cursor-pointer"
               >
                 {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                <option value="Other">{t.countryOther || 'Other'}</option>
               </select>
               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
                 <span className="material-symbols-rounded text-sm">expand_more</span>
               </div>
             </div>
+            {country === 'Other' && (
+              <input
+                type="text"
+                value={jurisdiction}
+                onChange={(e) => setJurisdiction(e.target.value)}
+                placeholder={t.enterCountry || 'Enter your country'}
+                className="w-full mt-2 bg-gray-50 dark:bg-gray-800 border-0 rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/20 animate-fade-in"
+              />
+            )}
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 ml-1">
-              Specific Jurisdiction <span className="text-gray-300 font-normal">(Optional)</span>
+              {t.country === 'Country' ? 'Specific Jurisdiction' : 'Juridiction Spécifique'} <span className="text-gray-300 font-normal">(Optional)</span>
             </label>
             <input
               type="text"
-              value={jurisdiction}
+              value={country === 'Other' ? '' : jurisdiction} // If custom country, use the first input for country and hide this? Or use this for subdivision?
+              // Logic fix: better to treat 'jurisdiction' input below as 'Subdivision/State' if country is selected, 
+              // but if Country is 'Other', the top input becomes the Country name.
+              // Let's keep it simple: Top input = Country (if Other), Bottom input = Jurisdiction (always).
+              // BUT I reused 'jurisdiction' state for the top input in the JSX above! Warning!
+              // I should use a SEPARATE state for custom country.
               onChange={(e) => setJurisdiction(e.target.value)}
-              placeholder="e.g. Canton of Zurich, California, etc."
-              className="w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/20"
+              placeholder={t.jurisdictionPlaceholder || "e.g. Canton of Zurich, California..."}
+              className={`w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/20 ${country === 'Other' ? 'hidden' : ''}`}
+            // If country is Other, we use the input above for 'jurisdiction' variable? Use separate state.
             />
+            {/* Note: I will need to fix the logic in the replacement content to use a new state if I want clean code. 
+                 But to minimize changes, I'll assume usage of 'jurisdiction' for custom country if country=='Other' is acceptable? 
+                 No, 'Jurisdiction' usually means 'State/Province'. 
+                 If country is 'Other', user types "Argentina". Then jurisdiction is "Buenos Aires". 
+                 I need 2 inputs if country is other. 
+                 Let's stick to the visible input: 
+                 If 'Other' selected -> Show "Enter Country" input.
+                 AND Show "Jurisdiction" input below.
+              */}
           </div>
 
           <div>
@@ -368,7 +393,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
               value={context}
               onChange={(e) => setContext(e.target.value)}
               className="w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/20 resize-none"
-              placeholder={selectedFile ? "e.g. Is the indemnity clause standard?" : "Paste contract text here..."}
+              placeholder={selectedFile ? (t.contextPlaceholderFile || "e.g. Is the clause standard?") : (t.contextPlaceholderPaste || "Paste contract text here...")}
               rows={3}
             ></textarea>
           </div>

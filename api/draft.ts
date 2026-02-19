@@ -35,15 +35,16 @@ export default async function handler(req: Request) {
         let taskInstructions = "";
         if (template === 'Form Filling Data') {
             taskInstructions = `
-- Conduct a FRESH AND DEEP ANALYTICAL REVIEW of the entire document context to identify all interactive, fillable, or required fields.
-- Analyze each field WITHIN THE CONTEXT of the document's purpose (e.g., if it's a tax form, explain the financial implications).
-- Act as a STEP-BY-STEP TUTORIAL (guide détaillé) guiding the user.
-- For EVERY field identified, explain:
-    1. WHAT exactly is required.
-    2. WHY it is required (the legal or administrative context).
-    3. WHERE to find the information if it's not already in the document.
-- DO NOT impose rigid data extraction constraints; instead, provide a flexible, instructional narrative.
-- Use a supportive and pedagogical tone.`;
+- Conduct a FRESH AND DEEP ANALYTICAL REVIEW of the Document Context.
+- The user wants to fill out this form but needs help understanding what to put in each field.
+- IDENTIFY every single field that needs to be filled.
+- OUTPUT FORMAT: Provide a list where each item represents a field.
+- Format each item EXACTLY as: "Field Name: <Explanation of what to write> (Context: <Any relevant info found in the doc>)"
+- If the document contains the info (e.g. it's a pre-filled form or personal data is known from context), mention it.
+- If it's a blank field, explain clearly what information is expected.
+- Use a "Guide / Tutorial" style. addressing the user directly (e.g. "Here, put your name...").
+- Do not output generic "Fill this form" text. Be specific to the fields found.
+- Tone: Pedagogical, clear, helpful.`;
         } else if (template === 'Clarify') {
             taskInstructions = `
 - Identify complex, vague, or ambiguous points in the document.

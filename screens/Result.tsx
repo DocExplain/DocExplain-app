@@ -130,14 +130,11 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 z-40" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <div className="max-w-md mx-auto flex gap-3">
           <button
-            onClick={onBack}
-            className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 font-medium py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            onClick={() => onDraft({ type: 'chat' })}
+            className="flex-1 bg-primary text-white font-medium py-3 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
           >
-            {t.back}
-          </button>
-          <button className="flex-1 bg-primary text-white font-medium py-3 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
             <span className="material-symbols-rounded text-sm">chat</span>
-            {t.askFollowup}
+            {t.askQuestionOnDoc}
           </button>
         </div>
       </div>

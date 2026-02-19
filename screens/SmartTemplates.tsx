@@ -139,7 +139,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     };
 
     return (
-        <div className="flex-1 flex flex-col pb-40 animate-slide-up overflow-y-auto">
+        <div className="flex-1 flex flex-col pb-56 animate-slide-up overflow-y-auto">
             {/* Header */}
             <div className="sticky top-0 z-20 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
                 <button onClick={handleBack} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">

@@ -7,9 +7,21 @@ export const config = {
     runtime: "edge",
 };
 
+const CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+    "Access-Control-Allow-Headers": "Content-Type, X-Model-Used",
+    "Access-Control-Expose-Headers": "X-Model-Used",
+};
+
+
 export default async function handler(req: Request) {
+    if (req.method === "OPTIONS") {
+        return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
     if (req.method !== "POST") {
-        return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
+        return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: CORS_HEADERS });
     }
 
     try {
@@ -77,7 +89,7 @@ You must return a JSON object with:
             });
 
             return new Response(completion.choices[0].message.content, {
-                headers: { 'Content-Type': 'application/json' }
+                headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
             });
         }
 
@@ -91,7 +103,7 @@ You must return a JSON object with:
                 });
 
                 return new Response(response.text || "", {
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
                 });
             } catch (e: any) {
                 console.error("Gemini Draft Error:", e);
@@ -102,6 +114,9 @@ You must return a JSON object with:
         throw new Error("No API keys configured");
 
     } catch (err: any) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: err.message }), {
+            status: 500,
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+        });
     }
 }

@@ -18,6 +18,14 @@ Return a JSON object with:
   - label: short action button text (3 words max)
   - description: why this action is recommended`;
 
+const CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+    "Access-Control-Allow-Headers": "Content-Type, X-Model-Used",
+    "Access-Control-Expose-Headers": "X-Model-Used",
+};
+
+
 async function analyzeWithGemini(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, geminiKey: string) {
     const ai = new GoogleGenAI({ apiKey: geminiKey });
 
@@ -128,15 +136,19 @@ async function analyzeWithOpenAI(contextAndText: string, fileName: string, image
 }
 
 export default async function handler(req: Request) {
+    if (req.method === "OPTIONS") {
+        return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
     if (req.method !== "POST") {
-        return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
+        return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: CORS_HEADERS });
     }
 
     try {
         const { contextAndText = "", fileName = "document", imageBase64, lang = "English" } = await req.json();
 
         if (!contextAndText && !imageBase64) {
-            return new Response(JSON.stringify({ error: "No context or image provided" }), { status: 400 });
+            return new Response(JSON.stringify({ error: "No context or image provided" }), { status: 400, headers: CORS_HEADERS });
         }
 
         const openaiKey = process.env.OPENAI_API_KEY;
@@ -203,6 +215,7 @@ export default async function handler(req: Request) {
             timestamp: new Date().toISOString()
         }), {
             headers: {
+                ...CORS_HEADERS,
                 'Content-Type': 'application/json',
                 'X-Model-Used': result ? (result.fallback ? secondaryModel : primaryModel) : 'none'
             }
@@ -215,7 +228,7 @@ export default async function handler(req: Request) {
             details: err.stack
         }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
         });
     }
 }

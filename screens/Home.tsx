@@ -178,25 +178,32 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       return;
     }
 
-    const fullContext = `
-      Document Text: ${textToAnalyze}
-      User Context/Questions: ${context}
-      Jurisdiction: ${country === 'Other' ? (jurisdiction || 'Custom') : country} ${country !== 'Other' && jurisdiction ? `(${jurisdiction})` : ''}
-    `;
+    try {
+      const fullContext = `
+        Document Text: ${textToAnalyze}
+        User Context/Questions: ${context}
+        Jurisdiction: ${country === 'Other' ? (jurisdiction || 'Custom') : country} ${country !== 'Other' && jurisdiction ? `(${jurisdiction})` : ''}
+      `;
 
-    const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imageBase64);
+      const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imageBase64);
 
-    incrementUsage();
-    setLoading(false);
-    setCameraBase64(null);
+      incrementUsage();
+      setLoading(false);
+      setCameraBase64(null);
 
-    // Ad Logic
-    if (!isPro) {
-      setPendingResult(result);
-      setAdType('interstitial');
-      setShowAd(true);
-    } else {
-      onAnalysisComplete(result);
+      // Ad Logic
+      if (!isPro) {
+        setPendingResult(result);
+        setAdType('interstitial');
+        setShowAd(true);
+      } else {
+        onAnalysisComplete(result);
+      }
+    } catch (error) {
+      console.error("Analysis Error:", error);
+      setLoading(false);
+      setShowDebug(true);
+      alert("Analysis failed. Please check the debug logs (bug icon).");
     }
   };
 
@@ -275,20 +282,32 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
 
         {/* Debug Console */}
         {showDebug && (
-          <div className="bg-black/90 p-3 rounded-lg mb-4 max-h-40 overflow-y-auto text-[10px] font-mono text-green-400 shadow-xl border border-gray-700 pointer-events-auto">
-            <div className="flex justify-between items-center border-b border-gray-700 pb-1 mb-1">
-              <span className="font-bold text-white">Debug Logs</span>
-              <button onClick={() => setDebugLogs([])} className="text-gray-500 hover:text-white">Clear</button>
+          <div className="bg-black/90 p-3 rounded-lg mb-4 max-h-40 overflow-y-auto text-[10px] font-mono text-green-400 shadow-xl border border-gray-700 pointer-events-auto animate-fade-in relative">
+            <div className="flex justify-between items-center border-b border-gray-700 pb-1 mb-1 sticky top-0 bg-black/90">
+              <span className="font-bold text-white">Debug Logs (v1.1.2)</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(debugLogs.join('\n'));
+                    alert('Logs copied to clipboard');
+                  }}
+                  className="text-blue-400 hover:text-white font-bold"
+                >
+                  COPY
+                </button>
+                <button onClick={() => setDebugLogs([])} className="text-gray-500 hover:text-white">Clear</button>
+              </div>
             </div>
             {debugLogs.length === 0 ? <span className="opacity-50 italic">No logs...</span> : debugLogs.map((l, i) => (
-              <div key={i} className={`whitespace-pre-wrap mb-0.5 ${l.startsWith('ERR') ? 'text-red-400' : ''}`}>{l}</div>
+              <div key={i} className={`whitespace-pre-wrap mb-0.5 ${l.startsWith('ERR') ? 'text-red-400 font-bold' : ''}`}>{l}</div>
             ))}
           </div>
         )}
 
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight mb-3">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight mb-1">
           {t.heroTitle}
         </h2>
+        <p className="text-[10px] text-gray-400 mb-3 font-mono">Build: v1.1.2 ({new Date().toLocaleDateString()})</p>
 
         <div className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full mb-2">
           {isPro ? (

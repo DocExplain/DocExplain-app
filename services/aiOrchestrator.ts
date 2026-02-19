@@ -15,7 +15,7 @@ const getOpenAIClient = () => {
     return new OpenAI({ apiKey, dangerouslyAllowBrowser: true }); // Client-side usage for demo
 };
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = import.meta.env.VITE_API_URL || 'https://doc-explain-app.vercel.app';
 
 export const explainDocument = async (contextAndText: string, fileName: string, lang: string, imageBase64?: string): Promise<AnalysisResult> => {
     console.log(`[Orchestrator] Starting analysis. Context len: ${contextAndText.length}, Image present: ${!!imageBase64}`);

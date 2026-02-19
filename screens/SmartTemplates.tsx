@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { AnalysisResult } from '../types';
 import { generateDraft } from '../services/aiOrchestrator';
 import { useLanguage } from '../i18n/LanguageContext';
+import { AdModal } from '../components/AdModal';
 
 interface SmartTemplatesProps {
     result: AnalysisResult;
     initialAction?: any;
     onBack: () => void;
+    isPro?: boolean;
 }
 
 type ResponsePath = 'extension' | 'dispute' | 'clarify' | 'accept' | 'fill';
 
-export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialAction, onBack }) => {
+export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialAction, onBack, isPro = false }) => {
     const { t, lang } = useLanguage();
 
     const allResponsePaths: { id: ResponsePath; icon: string; label: string; subtitle: string }[] = [
@@ -24,10 +26,16 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
 
     const responsePaths = allResponsePaths.filter(path => {
         const cat = result.category?.toLowerCase() || '';
+        // UI CLEANUP per user request: if it's a form, basically only show "fill" 
+        // and avoid "clarify" and "accept" which are less relevant
+        if (cat === 'form') {
+            return path.id === 'fill';
+        }
+
         if (path.id === 'fill') return cat === 'form';
         if (path.id === 'dispute') return ['bill', 'legal', 'lease', 'scam'].includes(cat);
         if (path.id === 'extension') return ['bill', 'legal', 'lease', 'medical'].includes(cat);
-        return true; // clarify and accept always shown
+        return true; // clarify and accept always shown for non-forms
     });
 
     const templateMap: Record<ResponsePath, string> = {
@@ -55,6 +63,10 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     const [loading, setLoading] = useState(false);
     const [tone, setTone] = useState<'Professional' | 'Friendly' | 'Firm'>('Professional');
 
+    // Ad logic for "Fill Form"
+    const [showAd, setShowAd] = useState(false);
+    const [pendingPath, setPendingPath] = useState<ResponsePath | null>(null);
+
     useEffect(() => {
         handleGenerate();
     }, [selectedPath, tone]);
@@ -72,6 +84,24 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
         setLoading(false);
     };
 
+    const onSelectPath = (path: ResponsePath) => {
+        // PER USER: Click "Remplir" (fill) should trigger ad
+        if (path === 'fill' && !isPro) {
+            setPendingPath(path);
+            setShowAd(true);
+        } else {
+            setSelectedPath(path);
+        }
+    };
+
+    const handleAdComplete = () => {
+        setShowAd(false);
+        if (pendingPath) {
+            setSelectedPath(pendingPath);
+            setPendingPath(null);
+        }
+    };
+
     const handleAskQuestion = (e: React.FormEvent) => {
         e.preventDefault();
         if (!customQuestion.trim()) return;
@@ -85,14 +115,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
 
     const handleCopy = () => {
         navigator.clipboard.writeText(draft);
-    };
-
-    const handlePreviewPDF = () => {
-        const w = window.open('', '_blank');
-        if (w) {
-            w.document.write(`<html><head><title>Preview - ${result.fileName}</title><style>body{font-family:Inter,sans-serif;max-width:700px;margin:40px auto;padding:20px;color:#1f2937;line-height:1.7}h1{font-size:18px;color:#2563eb}pre{white-space:pre-wrap;font-family:inherit}</style></head><body><h1>Draft Response</h1><pre>${draft}</pre></body></html>`);
-            w.document.close();
-        }
+        alert(t.copied);
     };
 
     return (
@@ -102,7 +125,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                 <button onClick={onBack} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                     <span className="material-symbols-rounded text-gray-900 dark:text-white">arrow_back</span>
                 </button>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">Smart Templates</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">{t.draftResponse}</h2>
             </div>
 
             <div className="p-4 space-y-6">
@@ -125,7 +148,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                         {responsePaths.map((path) => (
                             <button
                                 key={path.id}
-                                onClick={() => setSelectedPath(path.id)}
+                                onClick={() => onSelectPath(path.id)}
                                 className={`relative flex flex-col items-start p-4 rounded-xl border-2 transition-all duration-200 ${selectedPath === path.id
                                     ? 'border-primary bg-blue-50 dark:bg-blue-900/20 shadow-md shadow-blue-500/10'
                                     : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark hover:border-gray-300 dark:hover:border-gray-600'
@@ -239,24 +262,25 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                 </div>
             </div>
 
-            {/* Fixed Bottom Bar */}
+            {/* Fixed Bottom Bar - Removed Preview PDF button per user request */}
             <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 pb-6 z-40">
-                <div className="max-w-md mx-auto flex gap-3">
-                    <button
-                        onClick={handlePreviewPDF}
-                        className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 font-medium py-3.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
-                    >
-                        {t.previewPdf}
-                    </button>
+                <div className="max-w-md mx-auto">
                     <button
                         onClick={handleCopy}
-                        className="flex-1 bg-primary text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                        className="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
                     >
                         {t.copy}
-                        <span className="material-symbols-rounded text-lg">arrow_forward</span>
+                        <span className="material-symbols-rounded text-lg">content_copy</span>
                     </button>
                 </div>
             </div>
+
+            {showAd && (
+                <AdModal
+                    onClose={handleAdComplete}
+                    type="reward"
+                />
+            )}
         </div>
     );
 };

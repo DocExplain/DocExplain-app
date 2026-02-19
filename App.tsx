@@ -54,6 +54,7 @@ const App: React.FC = () => {
             result={analysisResult}
             initialAction={selectedAction}
             onBack={() => setCurrentScreen(Screen.RESULT)}
+            isPro={isPro}
           />
         ) : null;
       case Screen.DRAFT:

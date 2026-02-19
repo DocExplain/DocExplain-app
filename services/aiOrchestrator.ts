@@ -32,6 +32,11 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
         });
         clearTimeout(timeoutId);
 
+        const modelUsed = response.headers.get('X-Model-Used');
+        if (modelUsed) {
+            console.log(`[Orchestrator] Model used for analysis: ${modelUsed}`);
+        }
+
         console.log(`[Orchestrator] Response status: ${response.status}`);
         if (!response.ok) {
             const errText = await response.text();
@@ -60,6 +65,12 @@ export const generateDraft = async (summary: string, tone: string, template: str
             body: JSON.stringify({ context: summary, tone, template, lang }),
             signal: controller.signal
         });
+
+        const modelUsed = response.headers.get('X-Model-Used');
+        if (modelUsed) {
+            console.log(`[Orchestrator] Model used for draft: ${modelUsed}`);
+        }
+
         clearTimeout(timeoutId);
 
         if (!response.ok) {

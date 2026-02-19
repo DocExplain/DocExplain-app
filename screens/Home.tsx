@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Screen } from '../types';
-import { explainDocument } from '../services/aiOrchestrator';
-import { AdModal } from '../components/AdModal';
+import React, { useState, useEffect, useRef } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { useLanguage, SUPPORTED_LANGS } from '../i18n/LanguageContext';
-
+import { useLanguage } from '../i18n/LanguageContext';
+import { SUPPORTED_LANGS } from '../i18n/translations';
+import { explainDocument } from '../services/aiOrchestrator';
+import { Screen } from '../types';
+import { AdModal } from '../components/AdModal';
+import { PreviewModal } from '../components/PreviewModal';
 interface HomeProps {
   onAnalysisComplete: (result: any) => void;
   onNavigate: (screen: Screen) => void;
@@ -30,6 +31,8 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   const [context, setContext] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [cameraBase64, setCameraBase64] = useState<string | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<'image' | 'pdf'>('image');
 
   // Usage & Limits
   const [dailyUsage, setDailyUsage] = useState(0);
@@ -113,17 +116,28 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       setSelectedFile(file);
       event.target.value = '';
 
-      // If image, resize immediately
-      if (file.type.includes('image')) {
-        try {
+      try {
+        if (file.type.includes('image')) {
           const resizedBase64 = await resizeImage(file);
-          setCameraBase64(resizedBase64); // Use cameraBase64 to store the processable image data
-        } catch (e) {
-          console.error("Resize failed", e);
+          setFilePreview(resizedBase64);
+          setFileType('image');
+        } else if (file.type.includes('pdf')) {
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve((e.target?.result as string).split(',')[1]);
+            reader.readAsDataURL(file);
+          });
+          setFilePreview(base64);
+          setFileType('pdf');
+        } else {
+          setFilePreview(null);
+          setFileType('image');
         }
-      } else {
-        setCameraBase64(null); // Clear for non-images
+      } catch (e) {
+        console.error("File read failed", e);
       }
+
+      setCameraBase64(null); // Clear camera if file selected
     }
   };
 
@@ -140,6 +154,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       if (image.base64String) {
         setCameraBase64(image.base64String);
         setSelectedFile(null);
+        setFilePreview(null);
       }
     } catch (e) {
       console.error("Camera error or canceled", e);
@@ -286,7 +301,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
               <span className="material-symbols-rounded">close</span>
             </button>
             <img
-              src={`data:image/jpeg;base64,${cameraBase64}`}
+              src={cameraBase64 ? `data:image/jpeg;base64,${cameraBase64}` : `data:${fileType === 'pdf' ? 'application/pdf' : 'image/jpeg'};base64,${filePreview}`}
               alt="Preview"
               className="w-full h-auto max-h-[80vh] object-contain"
             />
@@ -398,21 +413,27 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         </div>
       ) : (
         <div className="mb-6 bg-white dark:bg-surface-dark rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between animate-fade-in">
-          <div className="flex items-center gap-3 overflow-hidden">
+          <div className="flex items-center gap-3 overflow-hidden" onClick={() => (cameraBase64 || filePreview) && setShowPreview(true)}>
             <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary shrink-0">
-              <span className="material-symbols-rounded">{cameraBase64 ? 'photo_camera' : 'description'}</span>
+              <span className="material-symbols-rounded">{(cameraBase64 || filePreview) ? (fileType === 'pdf' && !cameraBase64 ? 'picture_as_pdf' : 'photo_camera') : 'description'}</span>
             </div>
             <div className="min-w-0">
               <p className="font-medium text-gray-900 dark:text-white truncate text-sm">
                 {cameraBase64 ? 'Scanned Document' : selectedFile?.name}
               </p>
-              <p className="text-xs text-gray-500">
-                {cameraBase64 ? 'Ready for AI Vision analysis' : `${((selectedFile?.size || 0) / 1024).toFixed(1)} KB`}
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                {(cameraBase64 || filePreview) ?
+                  <>
+                    <span className="material-symbols-rounded text-[10px]">visibility</span>
+                    Tap to preview
+                  </> :
+                  `${((selectedFile?.size || 0) / 1024).toFixed(1)} KB`
+                }
               </p>
             </div>
           </div>
           <button
-            onClick={() => { setSelectedFile(null); setCameraBase64(null); }}
+            onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setCameraBase64(null); setFilePreview(null); }}
             className="p-2 text-gray-400 hover:text-red-500 transition-colors"
           >
             <span className="material-symbols-rounded">close</span>

@@ -22,6 +22,11 @@ export interface AnalysisResult {
     description: string;
   }[];
   fullText?: string;
+  originalDoc?: {
+    type: 'image' | 'pdf';
+    data: string; // base64
+    mimeType: string;
+  };
 }
 
 export interface DraftRequest {

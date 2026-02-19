@@ -16,7 +16,8 @@ Return a JSON object with:
 - "suggestedActions": array of {type, label, description}
   - type: one of ["pay", "fill", "dispute", "ignore", "clarify"]
   - label: short action button text (3 words max)
-  - description: why this action is recommended`;
+  - description: why this action is recommended
+- "extractedText": The FULL text content of the document (OCR). This is CRITICAL for follow-up tasks.`;
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -211,7 +212,7 @@ export default async function handler(req: Request) {
         return new Response(JSON.stringify({
             ...result,
             fileName,
-            fullText: contextAndText,
+            fullText: result.extractedText || contextAndText,
             timestamp: new Date().toISOString()
         }), {
             headers: {

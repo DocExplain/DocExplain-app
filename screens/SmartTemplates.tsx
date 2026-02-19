@@ -3,6 +3,7 @@ import { AnalysisResult } from '../types';
 import { generateDraft } from '../services/aiOrchestrator';
 import { useLanguage } from '../i18n/LanguageContext';
 import { AdModal } from '../components/AdModal';
+import { PreviewModal } from '../components/PreviewModal';
 
 interface SmartTemplatesProps {
     result: AnalysisResult;
@@ -68,6 +69,9 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     // Ad logic for "Fill Form"
     const [showAd, setShowAd] = useState(false);
     const [pendingPath, setPendingPath] = useState<ResponsePath | null>(null);
+
+    // Preview Logic
+    const [showPreview, setShowPreview] = useState(false);
 
     useEffect(() => {
         if (viewMode === 'draft') {
@@ -152,9 +156,20 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                     <>
                         <div className="rounded-xl bg-slate-900 shadow-lg overflow-hidden">
                             <div className="p-5">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="material-symbols-rounded text-primary text-sm">description</span>
-                                    <p className="text-primary text-xs font-bold uppercase tracking-wider">Document Analysis</p>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-rounded text-primary text-sm">description</span>
+                                        <p className="text-primary text-xs font-bold uppercase tracking-wider">Document Analysis</p>
+                                    </div>
+                                    {result.originalDoc && (
+                                        <button
+                                            onClick={() => setShowPreview(true)}
+                                            className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700 active:scale-95"
+                                        >
+                                            <span className="material-symbols-rounded text-slate-300 text-sm">visibility</span>
+                                            <span className="text-[10px] text-slate-300 font-medium">View Original</span>
+                                        </button>
+                                    )}
                                 </div>
                                 <h3 className="text-white text-lg font-bold leading-tight mb-2">{result.fileName.replace(/\.\w+$/, '').replace(/[-_]/g, ' ')}</h3>
 
@@ -210,9 +225,20 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                 {selectedPath === 'fill' ? 'Guidance & Tutorial' : 'Draft Editor'}
                             </h3>
-                            <div className="flex items-center gap-1.5 text-primary text-xs font-medium">
-                                <span className="material-symbols-rounded text-sm">auto_awesome</span>
-                                AI Generated
+                            <div className="flex items-center gap-2">
+                                {result.originalDoc && (
+                                    <button
+                                        onClick={() => setShowPreview(true)}
+                                        className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                        title="View Original Document"
+                                    >
+                                        <span className="material-symbols-rounded text-gray-500 text-sm">visibility</span>
+                                    </button>
+                                )}
+                                <div className="flex items-center gap-1.5 text-primary text-xs font-medium">
+                                    <span className="material-symbols-rounded text-sm">auto_awesome</span>
+                                    AI Generated
+                                </div>
                             </div>
                         </div>
 
@@ -281,6 +307,12 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                     type="reward"
                 />
             )}
+
+            <PreviewModal
+                isOpen={showPreview}
+                imageSrc={result.originalDoc ? `data:${result.originalDoc.mimeType};base64,${result.originalDoc.data}` : null}
+                onClose={() => setShowPreview(false)}
+            />
         </div>
     );
 };

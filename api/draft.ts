@@ -30,6 +30,8 @@ export default async function handler(req: Request) {
         const openaiKey = process.env.OPENAI_API_KEY;
         const geminiKey = process.env.GEMINI_API_KEY;
 
+        if (!openaiKey && !geminiKey) throw new Error("No API keys configured");
+
         let taskInstructions = "";
         if (template === 'Form Filling Data') {
             taskInstructions = `
@@ -80,43 +82,83 @@ You must return a JSON object with:
 2. "explanation": A very simple explanation of what this says.
 3. "disclaimer": A standard reminder that this is AI-generated.`;
 
-        const userPrompt = `Context: "${context.substring(0, 7000)}"`;
+        // Smart Logic: Gemini preferred for Forms (Deep Analysis) or Long Text
+        const isForm = template === 'Form Filling Data';
+        const isLong = context.length > 15000;
 
-        if (openaiKey) {
-            const openai = new OpenAI({ apiKey: openaiKey });
+        // Gemini has 1M context, GPT-4o-mini has 128k but is cost-effective.
+        // We prefer Gemini for "Form Filling" to ensure we don't truncate text if possible.
+        const primaryModel = (isForm || isLong) ? "gemini" : "openai";
+        const secondaryModel = primaryModel === "gemini" ? "openai" : "gemini";
+
+        let result;
+        let errors = [];
+
+        // Helper for Gemini
+        const callGemini = async (ctx: string) => {
+            const ai = new GoogleGenAI({ apiKey: geminiKey! });
+            // Gemini can handle huge context, let's cap at 100k safely
+            const prompt = `Context: "${ctx.substring(0, 100000)}"\n\n${systemPrompt}`;
+            const response = await ai.models.generateContent({
+                model: "gemini-2.0-flash",
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                config: { responseMimeType: "application/json" }
+            });
+            return response.text;
+        };
+
+        // Helper for OpenAI
+        const callOpenAI = async (ctx: string) => {
+            const openai = new OpenAI({ apiKey: openaiKey! });
+            // GPT-4o-mini context is 128k, but let's be safe with output tokens. Cap at 30k.
+            const prompt = `Context: "${ctx.substring(0, 30000)}"`;
             const completion = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
                 messages: [
                     { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
+                    { role: "user", content: prompt }
                 ],
                 response_format: { type: "json_object" }
             });
+            return completion.choices[0].message.content;
+        };
 
-            return new Response(completion.choices[0].message.content, {
-                headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-            });
+        // Execution
+        try {
+            if (primaryModel === "gemini" && geminiKey) {
+                result = await callGemini(context);
+            } else if (openaiKey) {
+                result = await callOpenAI(context);
+            } else if (geminiKey) {
+                result = await callGemini(context);
+            }
+        } catch (e: any) {
+            console.error(`Primary draft model (${primaryModel}) failed:`, e);
+            errors.push(e.message);
         }
 
-        if (geminiKey) {
+        if (!result) {
             try {
-                const ai = new GoogleGenAI({ apiKey: geminiKey });
-                const response = await ai.models.generateContent({
-                    model: "gemini-2.0-flash",
-                    contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
-                    config: { responseMimeType: "application/json" }
-                });
-
-                return new Response(response.text || "", {
-                    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-                });
+                if (secondaryModel === "gemini" && geminiKey) {
+                    result = await callGemini(context);
+                } else if (openaiKey) {
+                    result = await callOpenAI(context);
+                }
             } catch (e: any) {
-                console.error("Gemini Draft Error:", e);
-                throw e;
+                console.error(`Secondary draft model (${secondaryModel}) failed:`, e);
+                errors.push(e.message);
             }
         }
 
-        throw new Error("No API keys configured");
+        if (!result) throw new Error(`Draft generation failed. Errors: ${errors.join(' | ')}`);
+
+        return new Response(result, {
+            headers: {
+                ...CORS_HEADERS,
+                'Content-Type': 'application/json',
+                'X-Model-Used': result ? (errors.length > 0 ? secondaryModel : primaryModel) : 'none'
+            }
+        });
 
     } catch (err: any) {
         return new Response(JSON.stringify({ error: err.message }), {

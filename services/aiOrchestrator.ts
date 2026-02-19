@@ -18,31 +18,49 @@ const getOpenAIClient = () => {
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 export const explainDocument = async (contextAndText: string, fileName: string, lang: string, imageBase64?: string): Promise<AnalysisResult> => {
+    console.log(`[Orchestrator] Starting analysis. Context len: ${contextAndText.length}, Image present: ${!!imageBase64}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
     try {
+        console.log(`[Orchestrator] Fetching ${API_URL}/api/analyze...`);
         const response = await fetch(`${API_URL}/api/analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contextAndText, fileName, imageBase64, lang })
+            body: JSON.stringify({ contextAndText, fileName, imageBase64, lang }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
+        console.log(`[Orchestrator] Response status: ${response.status}`);
         if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
+            const errText = await response.text();
+            throw new Error(`Server error: ${response.status} - ${errText.substring(0, 100)}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        console.log(`[Orchestrator] Success. Summary len: ${data.summary?.length}`);
+        return data;
     } catch (err: any) {
-        console.error("Analysis failed:", err);
+        clearTimeout(timeoutId);
+        console.error("[Orchestrator] Analysis failed:", err);
         throw err;
     }
 };
 
 export const generateDraft = async (summary: string, tone: string, template: string, lang: string): Promise<string> => {
+    console.log(`[Orchestrator] Generating draft. Template: ${template}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
         const response = await fetch(`${API_URL}/api/draft`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ context: summary, tone, template, lang })
+            body: JSON.stringify({ context: summary, tone, template, lang }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             throw new Error(`Server error: ${response.status}`);
@@ -53,13 +71,17 @@ export const generateDraft = async (summary: string, tone: string, template: str
 
         if (typeof draftContent === 'object' && draftContent !== null) {
             return Object.entries(draftContent)
-                .map(([k, v]) => `${k}: ${v}`)
+                .map(([k, v]) => {
+                    const val = typeof v === 'object' ? JSON.stringify(v, null, 2) : v;
+                    return `${k}: ${val}`;
+                })
                 .join('\n');
         }
 
         return typeof draftContent === 'string' ? draftContent : "Could not generate draft.";
     } catch (err: any) {
-        console.error("Draft failed:", err);
+        clearTimeout(timeoutId);
+        console.error("[Orchestrator] Draft failed:", err);
         return "Error generating response.";
     }
 };

@@ -56,7 +56,7 @@ ${taskInstructions}
 IMPORTANT: 
 1. ALL text values in the JSON output (draft, explanation) MUST be in ${lang}.
 2. Use NO legal jargon in the "explanation".
-3. If the task is "Form Filling Data", the "draft" should be a structured list, not a letter.
+3. If the task is "Form Filling Data", the "draft" should be a SINGLE STRING formatted as a list (use newlines), NOT a nested JSON object.
 
 You must return a JSON object with:
 1. "draft": The generated response/answer.

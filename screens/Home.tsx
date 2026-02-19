@@ -215,6 +215,30 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
     }
   };
 
+  // Debugging
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const [showDebug, setShowDebug] = useState(false);
+
+  useEffect(() => {
+    const originalLog = console.log;
+    const originalError = console.error;
+
+    console.log = (...args) => {
+      setDebugLogs(prev => [...prev.slice(-49), `LOG: ${args.join(' ')}`]);
+      originalLog.apply(console, args);
+    };
+
+    console.error = (...args) => {
+      setDebugLogs(prev => [...prev.slice(-49), `ERR: ${args.join(' ')}`]);
+      originalError.apply(console, args);
+    };
+
+    return () => {
+      console.log = originalLog;
+      console.error = originalError;
+    };
+  }, []);
+
   // Derived state for UI
   const isLimitReached = !isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota);
   const hasInput = selectedFile || context || cameraBase64;
@@ -231,18 +255,36 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
 
       <div className="mt-4 mb-6">
         {/* Language Selector */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="material-symbols-rounded text-gray-400 text-sm">translate</span>
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as any)}
-            className="bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 rounded-lg px-2 py-1.5 border-0 focus:ring-2 focus:ring-primary/20 cursor-pointer"
-          >
-            {SUPPORTED_LANGS.map(l => (
-              <option key={l.code} value={l.code}>{l.name}</option>
-            ))}
-          </select>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-rounded text-gray-400 text-sm">translate</span>
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value as any)}
+              className="bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 rounded-lg px-2 py-1.5 border-0 focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              {SUPPORTED_LANGS.map(l => (
+                <option key={l.code} value={l.code}>{l.name}</option>
+              ))}
+            </select>
+          </div>
+          <button onClick={() => setShowDebug(!showDebug)} className="text-gray-300 p-1">
+            <span className="material-symbols-rounded text-xs">bug_report</span>
+          </button>
         </div>
+
+        {/* Debug Console */}
+        {showDebug && (
+          <div className="bg-black/90 p-3 rounded-lg mb-4 max-h-40 overflow-y-auto text-[10px] font-mono text-green-400 shadow-xl border border-gray-700 pointer-events-auto">
+            <div className="flex justify-between items-center border-b border-gray-700 pb-1 mb-1">
+              <span className="font-bold text-white">Debug Logs</span>
+              <button onClick={() => setDebugLogs([])} className="text-gray-500 hover:text-white">Clear</button>
+            </div>
+            {debugLogs.length === 0 ? <span className="opacity-50 italic">No logs...</span> : debugLogs.map((l, i) => (
+              <div key={i} className={`whitespace-pre-wrap mb-0.5 ${l.startsWith('ERR') ? 'text-red-400' : ''}`}>{l}</div>
+            ))}
+          </div>
+        )}
 
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight mb-3">
           {t.heroTitle}

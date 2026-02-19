@@ -51,6 +51,12 @@ export interface TranslationStrings {
     // New
     countryOther: string; enterCountry: string;
     contextPlaceholderFile: string; contextPlaceholderPaste: string; jurisdictionPlaceholder: string;
+    toneConcise: string; toneTutor: string; toneDetailed: string;
+    countryUS: string; countryUK: string; countryCA: string; countryAU: string; countryCH: string;
+    countryDE: string; countryFR: string; countryIT: string; countryES: string; countryNL: string;
+    countryBE: string; countryAT: string; countrySE: string; countryNO: string; countryDK: string;
+    countryFI: string; countryIE: string; countryIN: string; countrySG: string; countryJP: string;
+    countryBR: string; countryMX: string;
 }
 
 const en: TranslationStrings = {
@@ -95,6 +101,12 @@ const en: TranslationStrings = {
     contextPlaceholderFile: "e.g. Is the indemnity clause standard?",
     contextPlaceholderPaste: "Paste contract text here...",
     jurisdictionPlaceholder: "e.g. Canton of Zurich, California, etc.",
+    toneConcise: "Concise", toneTutor: "Helpful Tutor", toneDetailed: "Step-by-Step",
+    countryUS: "United States", countryUK: "United Kingdom", countryCA: "Canada", countryAU: "Australia", countryCH: "Switzerland",
+    countryDE: "Germany", countryFR: "France", countryIT: "Italy", countryES: "Spain", countryNL: "Netherlands",
+    countryBE: "Belgium", countryAT: "Austria", countrySE: "Sweden", countryNO: "Norway", countryDK: "Denmark",
+    countryFI: "Finland", countryIE: "Ireland", countryIN: "India", countrySG: "Singapore", countryJP: "Japan",
+    countryBR: "Brazil", countryMX: "Mexico",
 };
 
 const fr: TranslationStrings = {
@@ -139,6 +151,12 @@ const fr: TranslationStrings = {
     contextPlaceholderFile: "ex. La clause d'indemnisation est-elle standard ?",
     contextPlaceholderPaste: "Collez le texte du contrat ici...",
     jurisdictionPlaceholder: "ex. Canton de Zurich, Californie...",
+    toneConcise: "Précis", toneTutor: "Accompagné", toneDetailed: "Détaillé",
+    countryUS: "États-Unis", countryUK: "Royaume-Uni", countryCA: "Canada", countryAU: "Australie", countryCH: "Suisse",
+    countryDE: "Allemagne", countryFR: "France", countryIT: "Italie", countryES: "Espagne", countryNL: "Pays-Bas",
+    countryBE: "Belgique", countryAT: "Autriche", countrySE: "Suède", countryNO: "Norvège", countryDK: "Danemark",
+    countryFI: "Finlande", countryIE: "Irlande", countryIN: "Inde", countrySG: "Singapour", countryJP: "Japon",
+    countryBR: "Brésil", countryMX: "Mexique",
 };
 
 const de: TranslationStrings = {
@@ -183,6 +201,12 @@ const de: TranslationStrings = {
     contextPlaceholderFile: "z.B. Ist die Entschädigungsklausel Standard?",
     contextPlaceholderPaste: "Vertragstext hier einfügen...",
     jurisdictionPlaceholder: "z.B. Kanton Zürich, Kalifornien...",
+    toneConcise: "Präzise", toneTutor: "Begleitet", toneDetailed: "Detailliert",
+    countryUS: "Vereinigte Staaten", countryUK: "Vereinigtes Königreich", countryCA: "Kanada", countryAU: "Australien", countryCH: "Schweiz",
+    countryDE: "Deutschland", countryFR: "Frankreich", countryIT: "Italien", countryES: "Spanien", countryNL: "Niederlande",
+    countryBE: "Belgien", countryAT: "Österreich", countrySE: "Schweden", countryNO: "Norwegen", countryDK: "Dänemark",
+    countryFI: "Finnland", countryIE: "Irland", countryIN: "Indien", countrySG: "Singapur", countryJP: "Japan",
+    countryBR: "Brasilien", countryMX: "Mexiko",
 };
 
 const es: TranslationStrings = {
@@ -227,6 +251,12 @@ const es: TranslationStrings = {
     contextPlaceholderFile: "ej. ¿Es estándar la cláusula de indemnización?",
     contextPlaceholderPaste: "Pegue el texto del contrato aquí...",
     jurisdictionPlaceholder: "ej. Cantón de Zúrich, California...",
+    toneConcise: "Préciso", toneTutor: "Acompañado", toneDetailed: "Detallado",
+    countryUS: "Estados Unidos", countryUK: "Reino Unido", countryCA: "Canadá", countryAU: "Australia", countryCH: "Suiza",
+    countryDE: "Alemania", countryFR: "Francia", countryIT: "Italia", countryES: "España", countryNL: "Países Bajos",
+    countryBE: "Bélgica", countryAT: "Austria", countrySE: "Suecia", countryNO: "Noruega", countryDK: "Dinamarca",
+    countryFI: "Finlandia", countryIE: "Irlanda", countryIN: "India", countrySG: "Singapur", countryJP: "Japón",
+    countryBR: "Brasil", countryMX: "México",
 };
 
 const it: TranslationStrings = {
@@ -269,8 +299,14 @@ const it: TranslationStrings = {
     targetLang: "Lingua di risposta", simpleExplanation: "Cosa significa per te",
     countryOther: "Altro", enterCountry: "Inserisci il tuo paese",
     contextPlaceholderFile: "es. La clausola di indennizzo è standard?",
-    contextPlaceholderPaste: "Incolla qui il testo del contratto...",
+    contextPlaceholderPaste: "Incolla qui il testo del contrato...",
     jurisdictionPlaceholder: "es. Cantone di Zurigo, California...",
+    toneConcise: "Preciso", toneTutor: "Accompagnato", toneDetailed: "Dettagliato",
+    countryUS: "Stati Uniti", countryUK: "Regno Unito", countryCA: "Canada", countryAU: "Australia", countryCH: "Svizzera",
+    countryDE: "Germania", countryFR: "Francia", countryIT: "Italia", countryES: "Spagna", countryNL: "Paesi Bassi",
+    countryBE: "Belgio", countryAT: "Austria", countrySE: "Svezia", countryNO: "Norvegia", countryDK: "Danimarca",
+    countryFI: "Finlandia", countryIE: "Irlanda", countryIN: "India", countrySG: "Singapore", countryJP: "Giappone",
+    countryBR: "Brasile", countryMX: "Messico",
 };
 
 const pt: TranslationStrings = {
@@ -315,6 +351,12 @@ const pt: TranslationStrings = {
     contextPlaceholderFile: "ex. A cláusula de indenização é padrão?",
     contextPlaceholderPaste: "Cole o texto do contrato aqui...",
     jurisdictionPlaceholder: "ex. Cantão de Zurique, Califórnia...",
+    toneConcise: "Preciso", toneTutor: "Acompanhado", toneDetailed: "Detalhado",
+    countryUS: "Estados Unidos", countryUK: "Reino Unido", countryCA: "Canadá", countryAU: "Austrália", countryCH: "Suíça",
+    countryDE: "Alemanha", countryFR: "França", countryIT: "Itália", countryES: "Espanha", countryNL: "Países Baixos",
+    countryBE: "Bélgica", countryAT: "Áustria", countrySE: "Suécia", countryNO: "Noruega", countryDK: "Dinamarca",
+    countryFI: "Finlândia", countryIE: "Irlanda", countryIN: "Índia", countrySG: "Singapura", countryJP: "Japão",
+    countryBR: "Brasil", countryMX: "México",
 };
 
 const zh: TranslationStrings = {
@@ -359,6 +401,12 @@ const zh: TranslationStrings = {
     contextPlaceholderFile: "例如：赔偿条款是否标准？",
     contextPlaceholderPaste: "在此粘贴合同文本...",
     jurisdictionPlaceholder: "例如：苏黎世州，加利福尼亚...",
+    toneConcise: "精简", toneTutor: "辅助", toneDetailed: "详细",
+    countryUS: "美国", countryUK: "英国", countryCA: "加拿大", countryAU: "澳大利亚", countryCH: "瑞士",
+    countryDE: "德国", countryFR: "法国", countryIT: "意大利", countryES: "西班牙", countryNL: "荷兰",
+    countryBE: "比利时", countryAT: "奥地利", countrySE: "瑞典", countryNO: "挪威", countryDK: "丹麦",
+    countryFI: "芬兰", countryIE: "爱尔兰", countryIN: "印度", countrySG: "新加坡", countryJP: "日本",
+    countryBR: "巴西", countryMX: "墨西哥",
 };
 
 const hi: TranslationStrings = {
@@ -403,6 +451,12 @@ const hi: TranslationStrings = {
     contextPlaceholderFile: "उदा. क्या क्षतिपूर्ति खंड मानक है?",
     contextPlaceholderPaste: "अनुबंध पाठ यहाँ चिपकाएँ...",
     jurisdictionPlaceholder: "उदा. ज्यूरिख का कैंटन, कैलिफोर्निया...",
+    toneConcise: "संक्षिप्त", toneTutor: "शिक्षक", toneDetailed: "विस्तृत",
+    countryUS: "संयुक्त राज्य अमेरिका", countryUK: "यूनाइटेड किंगडम", countryCA: "कनाडा", countryAU: "ऑस्ट्रेलिया", countryCH: "स्विट्जरलैंड",
+    countryDE: "जर्मनी", countryFR: "फ्रांस", countryIT: "इटली", countryES: "स्पेन", countryNL: "नीदरलैंड",
+    countryBE: "बेल्जियम", countryAT: "ऑस्ट्रिया", countrySE: "स्वीडन", countryNO: "नार्वे", countryDK: "डेनमार्क",
+    countryFI: "फिनलैंड", countryIE: "आयरलैंड", countryIN: "भारत", countrySG: "सिंगापुर", countryJP: "जापान",
+    countryBR: "ब्राजील", countryMX: "मैक्सिको",
 };
 
 const ar: TranslationStrings = {
@@ -447,6 +501,12 @@ const ar: TranslationStrings = {
     contextPlaceholderFile: "مثال: هل شرط التعويض قياسي؟",
     contextPlaceholderPaste: "الصق نص العقد هنا...",
     jurisdictionPlaceholder: "مثال: كانتون زيورخ، كاليفورنيا...",
+    toneConcise: "مختصر", toneTutor: "مرافق", toneDetailed: "مفصل",
+    countryUS: "الولايات المتحدة", countryUK: "المملكة المتحدة", countryCA: "كندا", countryAU: "أستراليا", countryCH: "سويسرا",
+    countryDE: "ألمانيا", countryFR: "فرنسا", countryIT: "إيطاليا", countryES: "إسبانيا", countryNL: "هولندا",
+    countryBE: "بلجيكا", countryAT: "النمسا", countrySE: "السويد", countryNO: "النرويج", countryDK: "الدانمارك",
+    countryFI: "فنلندا", countryIE: "أيرلندا", countryIN: "الهند", countrySG: "سنغافورة", countryJP: "اليابان",
+    countryBR: "البرازيل", countryMX: "المكسيك",
 };
 
 const ru: TranslationStrings = {
@@ -491,6 +551,12 @@ const ru: TranslationStrings = {
     contextPlaceholderFile: "напр. Является ли пункт о возмещении стандартным?",
     contextPlaceholderPaste: "Вставьте текст договора здесь...",
     jurisdictionPlaceholder: "напр. Кантон Цюрих, Калифорния...",
+    toneConcise: "Кратко", toneTutor: "С гидом", toneDetailed: "Подробно",
+    countryUS: "США", countryUK: "Великобритания", countryCA: "Канада", countryAU: "Австралия", countryCH: "Швейцария",
+    countryDE: "Германия", countryFR: "Франция", countryIT: "Италия", countryES: "Испания", countryNL: "Нидерланды",
+    countryBE: "Бельгия", countryAT: "Австрия", countrySE: "Швеция", countryNO: "Норвегия", countryDK: "Дания",
+    countryFI: "Финляндия", countryIE: "Ирландия", countryIN: "Индия", countrySG: "Сингапур", countryJP: "Япония",
+    countryBR: "Бразилия", countryMX: "Мексика",
 };
 
 const bn: TranslationStrings = {
@@ -535,6 +601,12 @@ const bn: TranslationStrings = {
     contextPlaceholderFile: "যেমন: ক্ষতিপূরণ ধারা কি মানসম্মত?",
     contextPlaceholderPaste: "চুক্তি পাঠ্য এখানে পেস্ট করুন...",
     jurisdictionPlaceholder: "যেমন: জুরিখ ক্যান্টন, ক্যালিফোর্নিয়া...",
+    toneConcise: "সংক্ষিপ্ত", toneTutor: "টিউটর", toneDetailed: "বিস্তারিত",
+    countryUS: "মার্কিন যুক্তরাষ্ট্র", countryUK: "যুক্তরাজ্য", countryCA: "কানাডা", countryAU: "অস্ট্রেলিয়া", countryCH: "সুইজারল্যান্ড",
+    countryDE: "জার্মানি", countryFR: "ফ্রান্স", countryIT: "ইতালি", countryES: "স্পেন", countryNL: "নেদারল্যান্ডস",
+    countryBE: "বেলজিয়াম", countryAT: "অস্ট্রিয়া", countrySE: "সুইডেন", countryNO: "নরওয়ে", countryDK: "ডেনমার্ক",
+    countryFI: "ফিনল্যান্ড", countryIE: "আয়ারল্যান্ড", countryIN: "ভারত", countrySG: "সিঙ্গাপুর", countryJP: "জাপান",
+    countryBR: "ব্রাজিল", countryMX: "মেক্সিকো",
 };
 
 export const translations: Record<SupportedLang, TranslationStrings> = {

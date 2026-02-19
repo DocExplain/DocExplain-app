@@ -33,11 +33,15 @@ export default async function handler(req: Request) {
         let taskInstructions = "";
         if (template === 'Form Filling Data') {
             taskInstructions = `
-- For each field or piece of information required by the form, CLEARLY EXPLAIN what the user should write based on the document.
-- Format as a list: "Field Name: Instruction/Value to enter".
-- If a value is missing, write "[N/A - Not found in document]".
-- DO NOT invent information. Be literal.
-- The goal is to guide the user on how to complete the form using the document's data.`;
+- Conduct a FRESH AND DEEP ANALYTICAL REVIEW of the entire document context to identify all interactive, fillable, or required fields.
+- Analyze each field WITHIN THE CONTEXT of the document's purpose (e.g., if it's a tax form, explain the financial implications).
+- Act as a STEP-BY-STEP TUTORIAL (guide détaillé) guiding the user.
+- For EVERY field identified, explain:
+    1. WHAT exactly is required.
+    2. WHY it is required (the legal or administrative context).
+    3. WHERE to find the information if it's not already in the document.
+- DO NOT impose rigid data extraction constraints; instead, provide a flexible, instructional narrative.
+- Use a supportive and pedagogical tone.`;
         } else if (template === 'Clarify') {
             taskInstructions = `
 - Identify complex, vague, or ambiguous points in the document.

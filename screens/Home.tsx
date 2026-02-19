@@ -12,11 +12,11 @@ interface HomeProps {
   isPro: boolean;
 }
 
-const COUNTRIES = [
-  "United States", "United Kingdom", "Canada", "Australia", "Switzerland",
-  "Germany", "France", "Italy", "Spain", "Netherlands", "Belgium",
-  "Austria", "Sweden", "Norway", "Denmark", "Finland", "Ireland",
-  "India", "Singapore", "Japan", "Brazil", "Mexico", "Other"
+const getCountryList = (t: any) => [
+  t.countryUS, t.countryUK, t.countryCA, t.countryAU, t.countryCH,
+  t.countryDE, t.countryFR, t.countryIT, t.countryES, t.countryNL, t.countryBE,
+  t.countryAT, t.countrySE, t.countryNO, t.countryDK, t.countryFI, t.countryIE,
+  t.countryIN, t.countrySG, t.countryJP, t.countryBR, t.countryMX, t.countryOther
 ];
 
 const MAX_FREE_CHARS = 15000;
@@ -24,7 +24,8 @@ const MAX_DAILY_FREE_DOCS = 3;
 
 export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setLoading, isPro }) => {
   const { t, lang, setLang } = useLanguage();
-  const [country, setCountry] = useState('United States');
+  const countries = getCountryList(t);
+  const [country, setCountry] = useState(t.countryUS);
   const [jurisdiction, setJurisdiction] = useState('');
   const [context, setContext] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -402,8 +403,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
                 onChange={(e) => setCountry(e.target.value)}
                 className="w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 cursor-pointer"
               >
-                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                <option value="Other">{t.countryOther || 'Other'}</option>
+                {countries.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
                 <span className="material-symbols-rounded text-sm">expand_more</span>

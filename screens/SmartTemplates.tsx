@@ -226,28 +226,42 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
 
                     {/* Quick Edit Toolbar */}
                     <div className="flex flex-col items-center mt-6">
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2">Tone & Tools</p>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2">
+                            {selectedPath === 'fill' ? 'Guidance Level' : 'Tone & Tools'}
+                        </p>
                         <div className="inline-flex items-center bg-slate-900 rounded-full px-2 py-1.5 gap-1 shadow-lg">
                             <button
                                 onClick={() => setTone('Professional')}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${tone === 'Professional' ? 'bg-white text-slate-900' : 'text-gray-400 hover:text-white'}`}
                             >
-                                <span className="material-symbols-rounded text-lg">tune</span>
-                                <span className="text-[10px] font-bold uppercase tracking-tight">Serious</span>
+                                <span className="material-symbols-rounded text-lg">
+                                    {selectedPath === 'fill' ? 'short_text' : 'tune'}
+                                </span>
+                                <span className="text-[10px] font-bold uppercase tracking-tight">
+                                    {selectedPath === 'fill' ? t.toneConcise : 'Serious'}
+                                </span>
                             </button>
                             <button
                                 onClick={() => setTone('Friendly')}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${tone === 'Friendly' ? 'bg-white text-slate-900' : 'text-gray-400 hover:text-white'}`}
                             >
-                                <span className="material-symbols-rounded text-lg">equalizer</span>
-                                <span className="text-[10px] font-bold uppercase tracking-tight">Friendly</span>
+                                <span className="material-symbols-rounded text-lg">
+                                    {selectedPath === 'fill' ? 'school' : 'equalizer'}
+                                </span>
+                                <span className="text-[10px] font-bold uppercase tracking-tight">
+                                    {selectedPath === 'fill' ? t.toneTutor : 'Friendly'}
+                                </span>
                             </button>
                             <button
                                 onClick={() => setTone('Firm')}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${tone === 'Firm' ? 'bg-white text-slate-900' : 'text-gray-400 hover:text-white'}`}
                             >
-                                <span className="material-symbols-rounded text-lg">settings</span>
-                                <span className="text-[10px] font-bold uppercase tracking-tight">Direct</span>
+                                <span className="material-symbols-rounded text-lg">
+                                    {selectedPath === 'fill' ? 'list_alt' : 'settings'}
+                                </span>
+                                <span className="text-[10px] font-bold uppercase tracking-tight">
+                                    {selectedPath === 'fill' ? t.toneDetailed : 'Direct'}
+                                </span>
                             </button>
                             <div className="w-px h-4 bg-gray-700 mx-1"></div>
                             <button

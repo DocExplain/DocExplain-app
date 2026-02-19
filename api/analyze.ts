@@ -17,7 +17,7 @@ Return a JSON object with:
   - type: one of ["pay", "fill", "dispute", "ignore", "clarify"]
   - label: short action button text (3 words max)
   - description: why this action is recommended
-- "extractedText": The FULL text content of the document (OCR). This is CRITICAL for follow-up tasks.
+- "extractedText": THE FULL, EXACT TEXT CONTENT of the document (OCR). This is MANDATORY. If the document is legible, you MUST transcribe all text here.
 - "isLegible": boolean (true if document content is readable, false if too blurry/dark/cutoff)
 - "illegibleReason": string ("null" if legible, otherwise short explanation in user's language e.g. "Image too blurry")`;
 
@@ -82,9 +82,10 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
                             }
                         },
                         isLegible: { type: "boolean" },
-                        illegibleReason: { type: "string" }
+                        illegibleReason: { type: "string" },
+                        extractedText: { type: "string" }
                     },
-                    required: ["summary", "keyPoints", "category", "suggestedActions", "isLegible", "illegibleReason"]
+                    required: ["summary", "keyPoints", "category", "suggestedActions", "isLegible", "illegibleReason", "extractedText"]
                 }
             }
         });

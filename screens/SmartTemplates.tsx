@@ -245,108 +245,107 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         </div>
                     </>
-                    </>
                 )}
 
-            {/* Draft Editor Section - Only in Draft Mode */}
-            {viewMode === 'draft' && (
-                <div className="animate-slide-up">
-                    <div className="flex items-center justify-between mb-3 px-1">
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                            {selectedPath === 'fill' ? 'Guidance & Tutorial' : 'Draft Editor'}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                            {result.originalDoc && (
+                {/* Draft Editor Section - Only in Draft Mode */}
+                {viewMode === 'draft' && (
+                    <div className="animate-slide-up">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                {selectedPath === 'fill' ? 'Guidance & Tutorial' : 'Draft Editor'}
+                            </h3>
+                            <div className="flex items-center gap-2">
+                                {result.originalDoc && (
+                                    <button
+                                        onClick={() => setShowPreview(true)}
+                                        className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                        title="View Original Document"
+                                    >
+                                        <span className="material-symbols-rounded text-gray-500 text-sm">visibility</span>
+                                    </button>
+                                )}
+                                <div className="flex items-center gap-1.5 text-primary text-xs font-medium">
+                                    <span className="material-symbols-rounded text-sm">auto_awesome</span>
+                                    AI Generated
+                                </div>
+                            </div>
+                        </div>
+
+                        {loading ? (
+                            <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center min-h-[200px]">
+                                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{t.generating}</p>
+                            </div>
+                        ) : (
+                            <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                                <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+                                    <p className="text-sm text-gray-900 dark:text-white font-medium">
+                                        Topic: {responsePaths.find(p => p.id === selectedPath)?.label}
+                                    </p>
+                                </div>
+                                <textarea
+                                    value={draft}
+                                    onChange={(e) => setDraft(e.target.value)}
+                                    className="w-full min-h-[300px] p-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent placeholder-gray-400 focus:outline-none resize-none"
+                                    spellCheck={false}
+                                />
+                            </div>
+                        )}
+
+                        {/* Ask a Question Section - Keeps this available for "refaire une analyse" or clarification */}
+                        <div className="mt-4">
+                            <form onSubmit={handleAskQuestion} className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={customQuestion}
+                                    onChange={(e) => setCustomQuestion(e.target.value)}
+                                    placeholder="Posez une question sur le document..."
+                                    className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
+                                />
                                 <button
-                                    onClick={() => setShowPreview(true)}
-                                    className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                                    title="View Original Document"
+                                    type="submit"
+                                    disabled={loading || !customQuestion.trim()}
+                                    className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20"
                                 >
-                                    <span className="material-symbols-rounded text-gray-500 text-sm">visibility</span>
+                                    <span className="material-symbols-rounded">send</span>
                                 </button>
-                            )}
-                            <div className="flex items-center gap-1.5 text-primary text-xs font-medium">
-                                <span className="material-symbols-rounded text-sm">auto_awesome</span>
-                                AI Generated
-                            </div>
+                            </form>
                         </div>
                     </div>
-
-                    {loading ? (
-                        <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center min-h-[200px]">
-                            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.generating}</p>
-                        </div>
-                    ) : (
-                        <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
-                                <p className="text-sm text-gray-900 dark:text-white font-medium">
-                                    Topic: {responsePaths.find(p => p.id === selectedPath)?.label}
-                                </p>
-                            </div>
-                            <textarea
-                                value={draft}
-                                onChange={(e) => setDraft(e.target.value)}
-                                className="w-full min-h-[300px] p-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent placeholder-gray-400 focus:outline-none resize-none"
-                                spellCheck={false}
-                            />
-                        </div>
-                    )}
-
-                    {/* Ask a Question Section - Keeps this available for "refaire une analyse" or clarification */}
-                    <div className="mt-4">
-                        <form onSubmit={handleAskQuestion} className="flex gap-2">
-                            <input
-                                type="text"
-                                value={customQuestion}
-                                onChange={(e) => setCustomQuestion(e.target.value)}
-                                placeholder="Posez une question sur le document..."
-                                className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
-                            />
-                            <button
-                                type="submit"
-                                disabled={loading || !customQuestion.trim()}
-                                className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20"
-                            >
-                                <span className="material-symbols-rounded">send</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
-        </div>
-
-            {/* Fixed Bottom Bar - Only show Copy/Action in Draft Mode */ }
-    {
-        viewMode === 'draft' && (
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 pb-6 z-40">
-                <div className="max-w-md mx-auto">
-                    <button
-                        onClick={handleCopy}
-                        className="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
-                    >
-                        {t.copy}
-                        <span className="material-symbols-rounded text-lg">content_copy</span>
-                    </button>
-                </div>
+                )}
             </div>
-        )
-    }
 
-    {
-        showAd && (
-            <AdModal
-                onClose={handleAdComplete}
-                type="reward"
+            {/* Fixed Bottom Bar - Only show Copy/Action in Draft Mode */}
+            {
+                viewMode === 'draft' && (
+                    <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 pb-6 z-40">
+                        <div className="max-w-md mx-auto">
+                            <button
+                                onClick={handleCopy}
+                                className="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
+                            >
+                                {t.copy}
+                                <span className="material-symbols-rounded text-lg">content_copy</span>
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
+                showAd && (
+                    <AdModal
+                        onClose={handleAdComplete}
+                        type="reward"
+                    />
+                )
+            }
+
+            <PreviewModal
+                isOpen={showPreview}
+                imageSrc={result.originalDoc ? `data:${result.originalDoc.mimeType};base64,${result.originalDoc.data}` : null}
+                onClose={() => setShowPreview(false)}
             />
-        )
-    }
-
-    <PreviewModal
-        isOpen={showPreview}
-        imageSrc={result.originalDoc ? `data:${result.originalDoc.mimeType};base64,${result.originalDoc.data}` : null}
-        onClose={() => setShowPreview(false)}
-    />
         </div >
     );
 };

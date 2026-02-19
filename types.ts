@@ -27,6 +27,8 @@ export interface AnalysisResult {
     data: string; // base64
     mimeType: string;
   };
+  isLegible?: boolean;
+  illegibleReason?: string;
 }
 
 export interface DraftRequest {

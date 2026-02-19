@@ -154,49 +154,78 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                 {/* Original Document Card - Always Visible or just in Analysis? User said "explain content THEN deepen" */}
                 {viewMode === 'analysis' && (
                     <>
-                        <div className="rounded-xl bg-slate-900 shadow-lg overflow-hidden">
-                            <div className="p-5">
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className="material-symbols-rounded text-primary text-sm">description</span>
-                                        <p className="text-primary text-xs font-bold uppercase tracking-wider">Document Analysis</p>
-                                    </div>
-                                    {result.originalDoc && (
-                                        <button
-                                            onClick={() => setShowPreview(true)}
-                                            className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700 active:scale-95"
-                                        >
-                                            <span className="material-symbols-rounded text-slate-300 text-sm">visibility</span>
-                                            <span className="text-[10px] text-slate-300 font-medium">View Original</span>
-                                        </button>
-                                    )}
-                                </div>
-                                <h3 className="text-white text-lg font-bold leading-tight mb-2">{result.fileName.replace(/\.\w+$/, '').replace(/[-_]/g, ' ')}</h3>
 
-                                {/* Summary Section */}
-                                <div className="bg-slate-800/50 rounded-lg p-3 mb-3">
-                                    <p className="text-gray-300 text-sm leading-relaxed">
-                                        {result.summary || "No summary available."}
-                                    </p>
+                        {/* 1. Visual Document Preview & Legibility Warning */}
+                        <div className="mb-4">
+                            {result.isLegible === false && (
+                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-4 flex items-start gap-3 animate-fade-in">
+                                    <span className="material-symbols-rounded text-red-500 mt-0.5">warning</span>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-red-700 dark:text-red-300">Document may be unclear</h3>
+                                        <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
+                                            {result.illegibleReason || "The AI had trouble reading this document. Results might be inaccurate."}
+                                        </p>
+                                    </div>
                                 </div>
+                            )}
+
+                            <div
+                                onClick={() => setShowPreview(true)}
+                                className="relative w-full h-48 bg-slate-900 rounded-2xl overflow-hidden shadow-lg cursor-pointer group transition-all hover:scale-[1.01]"
+                            >
+                                {result.originalDoc ? (
+                                    <>
+                                        <img
+                                            src={`data:${result.originalDoc.mimeType};base64,${result.originalDoc.data}`}
+                                            alt="Document"
+                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="material-symbols-rounded text-white text-sm drop-shadow-md">visibility</span>
+                                                <span className="text-white text-xs font-bold uppercase tracking-wider drop-shadow-md">Preview Original</span>
+                                            </div>
+                                            <h3 className="text-white text-lg font-bold leading-tight drop-shadow-md line-clamp-1">{result.fileName}</h3>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
+                                        <span className="material-symbols-rounded text-4xl mb-2">description</span>
+                                        <span className="text-xs">No preview available</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 2. Analysis Summary Card */}
+                        <div className="rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden mb-6">
+                            <div className="p-5">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="material-symbols-rounded text-primary">auto_awesome</span>
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">AI Summary</h3>
+                                </div>
+
+                                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
+                                    {result.summary || "No summary available."}
+                                </p>
 
                                 {/* Key Points */}
                                 {result.keyPoints && result.keyPoints.length > 0 && (
-                                    <div className="space-y-2">
+                                    <div className="space-y-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
                                         {result.keyPoints.slice(0, 3).map((point, i) => (
                                             <div key={i} className="flex gap-2 items-start">
-                                                <span className="text-primary mt-1">•</span>
-                                                <p className="text-slate-300 text-xs">{point}</p>
+                                                <span className="text-primary mt-1 text-[10px]">●</span>
+                                                <p className="text-gray-700 dark:text-gray-300 text-xs">{point}</p>
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
-                                <p className="text-slate-500 text-[10px] mt-4 text-right">Analyzed on {formatDate()}</p>
+                                <p className="text-gray-400 text-[10px] mt-3 text-right">Analyzed on {formatDate()}</p>
                             </div>
                         </div>
 
-                        {/* Choose a Response Path - Only in Analysis Mode */}
+                        {/* 3. Choose a Response Actions */}
                         <div>
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.chooseResponse}</h3>
                             <div className="grid grid-cols-2 gap-3">
@@ -216,103 +245,108 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         </div>
                     </>
+                    </>
                 )}
 
-                {/* Draft Editor Section - Only in Draft Mode */}
-                {viewMode === 'draft' && (
-                    <div className="animate-slide-up">
-                        <div className="flex items-center justify-between mb-3 px-1">
-                            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                {selectedPath === 'fill' ? 'Guidance & Tutorial' : 'Draft Editor'}
-                            </h3>
-                            <div className="flex items-center gap-2">
-                                {result.originalDoc && (
-                                    <button
-                                        onClick={() => setShowPreview(true)}
-                                        className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                                        title="View Original Document"
-                                    >
-                                        <span className="material-symbols-rounded text-gray-500 text-sm">visibility</span>
-                                    </button>
-                                )}
-                                <div className="flex items-center gap-1.5 text-primary text-xs font-medium">
-                                    <span className="material-symbols-rounded text-sm">auto_awesome</span>
-                                    AI Generated
-                                </div>
-                            </div>
-                        </div>
-
-                        {loading ? (
-                            <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center min-h-[200px]">
-                                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{t.generating}</p>
-                            </div>
-                        ) : (
-                            <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
-                                <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
-                                    <p className="text-sm text-gray-900 dark:text-white font-medium">
-                                        Topic: {responsePaths.find(p => p.id === selectedPath)?.label}
-                                    </p>
-                                </div>
-                                <textarea
-                                    value={draft}
-                                    onChange={(e) => setDraft(e.target.value)}
-                                    className="w-full min-h-[300px] p-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent placeholder-gray-400 focus:outline-none resize-none"
-                                    spellCheck={false}
-                                />
-                            </div>
-                        )}
-
-                        {/* Ask a Question Section - Keeps this available for "refaire une analyse" or clarification */}
-                        <div className="mt-4">
-                            <form onSubmit={handleAskQuestion} className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={customQuestion}
-                                    onChange={(e) => setCustomQuestion(e.target.value)}
-                                    placeholder="Posez une question sur le document..."
-                                    className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
-                                />
+            {/* Draft Editor Section - Only in Draft Mode */}
+            {viewMode === 'draft' && (
+                <div className="animate-slide-up">
+                    <div className="flex items-center justify-between mb-3 px-1">
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            {selectedPath === 'fill' ? 'Guidance & Tutorial' : 'Draft Editor'}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                            {result.originalDoc && (
                                 <button
-                                    type="submit"
-                                    disabled={loading || !customQuestion.trim()}
-                                    className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20"
+                                    onClick={() => setShowPreview(true)}
+                                    className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                    title="View Original Document"
                                 >
-                                    <span className="material-symbols-rounded">send</span>
+                                    <span className="material-symbols-rounded text-gray-500 text-sm">visibility</span>
                                 </button>
-                            </form>
+                            )}
+                            <div className="flex items-center gap-1.5 text-primary text-xs font-medium">
+                                <span className="material-symbols-rounded text-sm">auto_awesome</span>
+                                AI Generated
+                            </div>
                         </div>
                     </div>
-                )}
-            </div>
 
-            {/* Fixed Bottom Bar - Only show Copy/Action in Draft Mode */}
-            {viewMode === 'draft' && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 pb-6 z-40">
-                    <div className="max-w-md mx-auto">
-                        <button
-                            onClick={handleCopy}
-                            className="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
-                        >
-                            {t.copy}
-                            <span className="material-symbols-rounded text-lg">content_copy</span>
-                        </button>
+                    {loading ? (
+                        <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center min-h-[200px]">
+                            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.generating}</p>
+                        </div>
+                    ) : (
+                        <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+                                <p className="text-sm text-gray-900 dark:text-white font-medium">
+                                    Topic: {responsePaths.find(p => p.id === selectedPath)?.label}
+                                </p>
+                            </div>
+                            <textarea
+                                value={draft}
+                                onChange={(e) => setDraft(e.target.value)}
+                                className="w-full min-h-[300px] p-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent placeholder-gray-400 focus:outline-none resize-none"
+                                spellCheck={false}
+                            />
+                        </div>
+                    )}
+
+                    {/* Ask a Question Section - Keeps this available for "refaire une analyse" or clarification */}
+                    <div className="mt-4">
+                        <form onSubmit={handleAskQuestion} className="flex gap-2">
+                            <input
+                                type="text"
+                                value={customQuestion}
+                                onChange={(e) => setCustomQuestion(e.target.value)}
+                                placeholder="Posez une question sur le document..."
+                                className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
+                            />
+                            <button
+                                type="submit"
+                                disabled={loading || !customQuestion.trim()}
+                                className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20"
+                            >
+                                <span className="material-symbols-rounded">send</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             )}
-
-            {showAd && (
-                <AdModal
-                    onClose={handleAdComplete}
-                    type="reward"
-                />
-            )}
-
-            <PreviewModal
-                isOpen={showPreview}
-                imageSrc={result.originalDoc ? `data:${result.originalDoc.mimeType};base64,${result.originalDoc.data}` : null}
-                onClose={() => setShowPreview(false)}
-            />
         </div>
+
+            {/* Fixed Bottom Bar - Only show Copy/Action in Draft Mode */ }
+    {
+        viewMode === 'draft' && (
+            <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 pb-6 z-40">
+                <div className="max-w-md mx-auto">
+                    <button
+                        onClick={handleCopy}
+                        className="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
+                    >
+                        {t.copy}
+                        <span className="material-symbols-rounded text-lg">content_copy</span>
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    {
+        showAd && (
+            <AdModal
+                onClose={handleAdComplete}
+                type="reward"
+            />
+        )
+    }
+
+    <PreviewModal
+        isOpen={showPreview}
+        imageSrc={result.originalDoc ? `data:${result.originalDoc.mimeType};base64,${result.originalDoc.data}` : null}
+        onClose={() => setShowPreview(false)}
+    />
+        </div >
     );
 };

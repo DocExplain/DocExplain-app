@@ -17,7 +17,9 @@ Return a JSON object with:
   - type: one of ["pay", "fill", "dispute", "ignore", "clarify"]
   - label: short action button text (3 words max)
   - description: why this action is recommended
-- "extractedText": The FULL text content of the document (OCR). This is CRITICAL for follow-up tasks.`;
+- "extractedText": The FULL text content of the document (OCR). This is CRITICAL for follow-up tasks.
+- "isLegible": boolean (true if document content is readable, false if too blurry/dark/cutoff)
+- "illegibleReason": string ("null" if legible, otherwise short explanation in user's language e.g. "Image too blurry")`;
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -30,7 +32,7 @@ const CORS_HEADERS = {
 async function analyzeWithGemini(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, geminiKey: string) {
     const ai = new GoogleGenAI({ apiKey: geminiKey });
 
-    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ALL text values in the JSON output (summary, keyPoints, warning, label, description) MUST be translated to ${lang}.`;
+    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ALL text values in the JSON output (summary, keyPoints, warning, label, description, illegibleReason) MUST be translated to ${lang}.`;
 
     let contents: any[] = [];
 
@@ -78,9 +80,11 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
                                 },
                                 required: ["type", "label", "description"]
                             }
-                        }
+                        },
+                        isLegible: { type: "boolean" },
+                        illegibleReason: { type: "string" }
                     },
-                    required: ["summary", "keyPoints", "category", "suggestedActions"]
+                    required: ["summary", "keyPoints", "category", "suggestedActions", "isLegible", "illegibleReason"]
                 }
             }
         });
@@ -95,7 +99,7 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
 async function analyzeWithOpenAI(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, openaiKey: string) {
     const openai = new OpenAI({ apiKey: openaiKey });
 
-    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ALL text values in the JSON output (summary, keyPoints, warning, label, description) MUST be translated to ${lang}.`;
+    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ALL text values in the JSON output (summary, keyPoints, warning, label, description, illegibleReason) MUST be translated to ${lang}.`;
 
     const messages: any[] = [
         { role: "system", content: localizedPrompt }

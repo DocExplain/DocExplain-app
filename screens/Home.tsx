@@ -238,6 +238,15 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         incrementUsage();
       }
 
+      // Restore originalDoc attachment for preview
+      if (imageBase64Data) {
+        result.originalDoc = {
+          type: 'image', // simplified, logic passes base64
+          data: imageBase64Data,
+          mimeType: imageBase64Data.startsWith('JVBER') ? 'application/pdf' : 'image/jpeg'
+        };
+      }
+
       onAnalysisComplete(result);
     } catch (error) {
       console.error("Analysis failed", error);

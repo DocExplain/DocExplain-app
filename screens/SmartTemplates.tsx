@@ -244,6 +244,26 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                                 ))}
                             </div>
                         </div>
+
+                        <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-6">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.askQuestion || "Ask a Question"}</h3>
+                            <form onSubmit={handleAskQuestion} className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={customQuestion}
+                                    onChange={(e) => setCustomQuestion(e.target.value)}
+                                    placeholder={t.askPlaceholder || "Ask about this document..."}
+                                    className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={loading || !customQuestion.trim()}
+                                    className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20"
+                                >
+                                    <span className="material-symbols-rounded">send</span>
+                                </button>
+                            </form>
+                        </div>
                     </>
                 )}
 
@@ -299,7 +319,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                                     type="text"
                                     value={customQuestion}
                                     onChange={(e) => setCustomQuestion(e.target.value)}
-                                    placeholder="Posez une question sur le document..."
+                                    placeholder={t.askPlaceholder || "Ask about this document..."}
                                     className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
                                 />
                                 <button
@@ -335,6 +355,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
             {
                 showAd && (
                     <AdModal
+                        isOpen={showAd}
                         onClose={handleAdComplete}
                         type="reward"
                     />

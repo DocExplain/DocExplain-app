@@ -53,7 +53,7 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
     }
 };
 
-export const generateDraft = async (summary: string, tone: string, template: string, lang: string): Promise<string> => {
+export const generateDraft = async (summary: string, tone: string, template: string, lang: string, currentDraft?: string): Promise<{ draft: string, explanation?: string, chatResponse?: string }> => {
     console.log(`[Orchestrator] Generating draft. Template: ${template}`);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -62,7 +62,7 @@ export const generateDraft = async (summary: string, tone: string, template: str
         const response = await fetch(`${API_URL}/api/draft`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ context: summary, tone, template, lang }),
+            body: JSON.stringify({ context: summary, tone, template, lang, currentDraft }),
             signal: controller.signal
         });
 
@@ -78,21 +78,27 @@ export const generateDraft = async (summary: string, tone: string, template: str
         }
 
         const data = await response.json();
-        const draftContent = data.draft;
 
-        if (typeof draftContent === 'object' && draftContent !== null) {
-            return Object.entries(draftContent)
+        let parsedDraft = data.draft;
+        if (typeof parsedDraft === 'object' && parsedDraft !== null) {
+            parsedDraft = Object.entries(parsedDraft)
                 .map(([k, v]) => {
                     const val = typeof v === 'object' ? JSON.stringify(v, null, 2) : v;
                     return `${k}: ${val}`;
                 })
                 .join('\n');
+        } else if (typeof parsedDraft !== 'string') {
+            parsedDraft = "Could not generate draft.";
         }
 
-        return typeof draftContent === 'string' ? draftContent : "Could not generate draft.";
+        return {
+            draft: parsedDraft,
+            explanation: data.explanation,
+            chatResponse: data.chatResponse
+        };
     } catch (err: any) {
         clearTimeout(timeoutId);
         console.error("[Orchestrator] Draft failed:", err);
-        return "Error generating response.";
+        return { draft: "Error generating response." };
     }
 };

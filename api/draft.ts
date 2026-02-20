@@ -25,7 +25,7 @@ export default async function handler(req: Request) {
     }
 
     try {
-        const { context, tone, template, lang = "English" } = await req.json();
+        const { context, tone, template, lang = "English", currentDraft = "" } = await req.json();
 
         const openaiKey = process.env.OPENAI_API_KEY;
         const geminiKey = process.env.GEMINI_API_KEY;
@@ -59,9 +59,14 @@ export default async function handler(req: Request) {
 - Cite the complexity of the document and the need for more time to prepare a complete response.`;
         } else if (template.startsWith('Question:')) {
             taskInstructions = `
-- Answer the following user question based ONLY on the provided document: ${template.replace('Question:', '')}
-- Provide a clear, direct answer. If the answer is not in the document, say you don't know based on the provided text.
-- If you use complex administrative, medical, or legal terms, EXPLAIN THEM IMMEDIATELY IN PARENTHESES in simpler words. (e.g., "Mise en demeure (a formal demand to pay)").`;
+- The user has a follow-up request: "${template.replace('Question:', '')}"
+- Here is the CURRENT DRAFT document they are editing:
+"""
+${currentDraft || "No draft exists yet"}
+"""
+- Analyze the user's request. If they are asking a question about the document or the topic, answer it clearly in the "chatResponse" field and return the CURRENT DRAFT exactly as it is in the "draft" field.
+- If they are asking you to modify the draft (e.g. "make it shorter", "add my address"), rewrite the draft accordingly and return it in the "draft" field. In the "chatResponse" field, briefly confirm what you changed.
+- If you use complex administrative, medical, or legal terms in "chatResponse", EXPLAIN THEM IMMEDIATELY IN PARENTHESES.`;
         } else {
             taskInstructions = `- Generate a highly professional, formal response draft based on the document content and the task: ${template}.
 - The document might be addressed TO the user. If you are drafting a response to the sender, WRITE AS THE USER addressing the sender (first person "I", "We"). DO NOT reply as if the user is replying to themselves.`;
@@ -81,9 +86,10 @@ IMPORTANT:
 3. If the task is "Form Filling Data", the "draft" should be a SINGLE STRING formatted as a list (use newlines), NOT a nested JSON object.
 
 You must return a JSON object with:
-1. "draft": The generated response/answer.
-2. "explanation": A very simple explanation of what this says. If you summarize or explain something, make sure to EXPLAIN complex words in parentheses. Do NOT use legal jargon. Keep it extremely simple for someone who doesn't understand administration.
-3. "disclaimer": A standard reminder that this is AI-generated.`;
+1. "draft": The generated or updated response/draft document.
+2. "explanation": A very simple explanation of what the draft says (only required when generating a new draft).
+3. "chatResponse": A conversational reply to the user (only required if answering a "Question" task, like "I added your address" or answering their question).
+4. "disclaimer": A standard reminder that this is AI-generated.`;
 
         // Smart Logic: Gemini preferred for Forms (Deep Analysis) or Long Text
         const isForm = template === 'Form Filling Data';

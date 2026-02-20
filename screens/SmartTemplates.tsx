@@ -61,6 +61,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     const [viewMode, setViewMode] = useState<'analysis' | 'draft'>('analysis');
     const [selectedPath, setSelectedPath] = useState<ResponsePath>(getInitialPath());
     const [draft, setDraft] = useState('');
+    const [chatLog, setChatLog] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
     const [customQuestion, setCustomQuestion] = useState('');
     const [loading, setLoading] = useState(false);
     // Tone removed per user request, defaulting to 'Professional' internally if needed or just redundant
@@ -84,15 +85,18 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
         try {
             const context = result.fullText || result.summary;
             const template = query ? `Question: ${query}` : templateMap[selectedPath];
-            // Uses 'Professional' tone by default now as buttons are removed, or we could pass 'Tutor' for forms implicitly
-            // Actually api/draft.ts logic for 'Form Filling Data' ignores tone largely and uses its own style.
-            const text = await generateDraft(context, tone, template, lang);
+            const responseData = await generateDraft(context, tone, template, lang, draft);
 
             if (query) {
-                setDraft(prev => prev + `\n\n--- ${query} ---\n\n${text}`);
+                const newChatResponse = responseData.chatResponse || responseData.explanation || "Done.";
+                setChatLog(prev => [...prev, { role: 'user', content: query }, { role: 'ai', content: newChatResponse }]);
+                if (responseData.draft && responseData.draft !== draft) {
+                    setDraft(responseData.draft);
+                }
                 setCustomQuestion('');
             } else {
-                setDraft(text);
+                setDraft(responseData.draft || "");
+                setChatLog([]);
             }
         } catch {
             if (!query) setDraft('Could not generate draft. Please try again.');
@@ -332,20 +336,31 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         )}
 
-                        {/* Ask a Question Section - Keeps this available for "refaire une analyse" or clarification */}
-                        <div className="mt-4">
+                        {/* Ask a Question Section - Chat Interface */}
+                        <div className="mt-4 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm relative z-30">
+                            {chatLog.length > 0 && (
+                                <div className="mb-4 space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                    {chatLog.map((msg, i) => (
+                                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`rounded-xl px-3 py-2 text-sm max-w-[85%] animate-fade-in ${msg.role === 'user' ? 'bg-primary text-white shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'}`}>
+                                                {msg.content}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                             <form onSubmit={handleAskQuestion} className="flex gap-2">
                                 <input
                                     type="text"
                                     value={customQuestion}
                                     onChange={(e) => setCustomQuestion(e.target.value)}
-                                    placeholder={t.askPlaceholder || "Ask about this document..."}
-                                    className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
+                                    placeholder={t.askPlaceholder || "Ask about document or modify draft..."}
+                                    className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-inner"
                                 />
                                 <button
                                     type="submit"
                                     disabled={loading || !customQuestion.trim()}
-                                    className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20"
+                                    className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20 hover:bg-blue-600 transition-colors"
                                 >
                                     <span className="material-symbols-rounded">send</span>
                                 </button>

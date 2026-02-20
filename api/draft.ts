@@ -39,11 +39,10 @@ export default async function handler(req: Request) {
 - The user wants to fill out this form but needs help understanding what to put in each field.
 - IDENTIFY every single field that needs to be filled.
 - OUTPUT FORMAT: Provide a list where each item represents a field.
-- Format each item EXACTLY as: "Field Name: <Explanation of what to write> (Context: <Any relevant info found in the doc>)"
-- If the document contains the info (e.g. it's a pre-filled form or personal data is known from context), mention it.
-- If it's a blank field, explain clearly what information is expected.
-- Use a "Guide / Tutorial" style. addressing the user directly (e.g. "Here, put your name...").
-- Do not output generic "Fill this form" text. Be specific to the fields found.
+- Format each item EXACTLY as: "Nom du champ : [Explication claire sur ce qui est attendu et où trouver l'info]"
+- DO NOT just copy the form with placeholders. You must EXPLAIN what is needed for each field.
+- If the document already contains the info (e.g., your name, address, or an ID number found in the context), mention it explicitly (e.g. "Vous pouvez trouver ce numéro en haut à droite du document : 12345").
+- Use a "Guide / Tutorial" style, addressing the user directly.
 - Tone: Pedagogical, clear, helpful.`;
         } else if (template === 'Clarify') {
             taskInstructions = `
@@ -66,7 +65,8 @@ ${currentDraft || "No draft exists yet"}
 """
 - Analyze the user's request. If they are asking a question about the document or the topic, answer it clearly in the "chatResponse" field and return the CURRENT DRAFT exactly as it is in the "draft" field.
 - If they are asking you to modify the draft (e.g. "make it shorter", "add my address"), rewrite the draft accordingly and return it in the "draft" field. In the "chatResponse" field, briefly confirm what you changed.
-- If you use complex administrative, medical, or legal terms in "chatResponse", EXPLAIN THEM IMMEDIATELY IN PARENTHESES.`;
+- Vulgarize and simplify complex administrative, medical, or legal terms. You are an assistant helping users understand their documents.
+- If you use complex terms in "chatResponse", EXPLAIN THEM IMMEDIATELY IN PARENTHESES.`;
         } else {
             taskInstructions = `- Generate a highly professional, formal response draft based on the document content and the task: ${template}.
 - The document might be addressed TO the user. If you are drafting a response to the sender, WRITE AS THE USER addressing the sender (first person "I", "We"). DO NOT reply as if the user is replying to themselves.`;

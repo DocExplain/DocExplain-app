@@ -15,7 +15,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigat
     { screen: Screen.FAQ, icon: 'help', label: t.help },
   ];
 
-  if (currentScreen === Screen.PAYWALL || currentScreen === Screen.RESULT) return null;
+  if (currentScreen === Screen.PAYWALL || currentScreen === Screen.RESULT || currentScreen === Screen.SMART_TEMPLATES || currentScreen === Screen.DRAFT) return null;
 
   return (
     <nav className="fixed bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none">

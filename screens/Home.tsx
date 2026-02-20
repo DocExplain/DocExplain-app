@@ -113,6 +113,12 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (file.size > 3 * 1024 * 1024) { // 3MB limit for Vercel Serverless payload
+        alert(t.errorFileTooLarge || "Ce fichier est trop lourd (Max 3Mo). Veuillez compresser votre document et réessayer.");
+        event.target.value = '';
+        return;
+      }
+
       setSelectedFile(file);
       event.target.value = '';
 

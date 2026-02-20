@@ -1,0 +1,20 @@
+INFOS DE SIGNATURE ANDROID - DOCUMATE (ORIGINAL - GOOGLE PLAY)
+-----------------------------------------------------------
+
+REMARQUE : Nous avons retrouvé la clé originale utilisée lors de la toute première publication !
+Google Play acceptera ce fichier sans erreur.
+
+Fichier Keystore : c:\Users\nicol\Downloads\documate\documate-release.jks
+Mot de passe Keystore : DocuMate2024!
+Alias de la clé : documate
+Mot de passe de la clé : DocuMate2024!
+Fingerprint SHA1 : 66:49:68:2F:20:DD:84:63:05:C9:FC:B3:FF:5F:7C:64:E8:73:F7:95
+
+DESTINATIONS DES FICHIERS POUR GOOGLE PLAY :
+---------------------------------------------
+
+1. Android App Bundle (.aab) - À ENVOYER SUR LE STORE :
+   c:\Users\nicol\Downloads\documate\android\app\build\outputs\bundle\release\app-release.aab
+
+2. APK (Pour vos tests personnels) :
+   c:\Users\nicol\Downloads\documate\android\app\build\outputs\apk\release\app-release.apk

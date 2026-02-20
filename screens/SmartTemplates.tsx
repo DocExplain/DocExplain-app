@@ -127,7 +127,16 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     const handleAskQuestion = (e: React.FormEvent) => {
         e.preventDefault();
         if (!customQuestion.trim()) return;
-        handleGenerate(customQuestion);
+
+        if (viewMode === 'analysis') {
+            setViewMode('draft');
+            // We set a small timeout so the transition happens before the generation starts
+            setTimeout(() => {
+                handleGenerate(customQuestion);
+            }, 50);
+        } else {
+            handleGenerate(customQuestion);
+        }
     };
 
     const formatDate = () => {
@@ -241,7 +250,32 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         </div>
 
-                        {/* 3. Choose a Response Actions */}
+                        <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-6">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.askQuestionOnDoc || "Ask a Question"}</h3>
+                            <form onSubmit={handleAskQuestion} className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={customQuestion}
+                                    onChange={(e) => setCustomQuestion(e.target.value)}
+                                    placeholder={t.askQuestionOnDoc || "Ask about this document..."}
+                                    className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={loading || !customQuestion.trim()}
+                                    className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20"
+                                >
+                                    <span className="material-symbols-rounded">send</span>
+                                </button>
+                            </form>
+                        </div>
+                    </>
+                )}
+
+                {/* DRAFT MODE */}
+                {viewMode === 'draft' && (
+                    <div className="animate-slide-up flex flex-col h-full space-y-4">
+                        {/* 3. Choose a Response Actions - Moved to Draft Mode */}
                         <div>
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.chooseResponse}</h3>
                             <div className="grid grid-cols-2 gap-3">
@@ -261,31 +295,6 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         </div>
 
-                        <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-6">
-                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.askQuestion || "Ask a Question"}</h3>
-                            <form onSubmit={handleAskQuestion} className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={customQuestion}
-                                    onChange={(e) => setCustomQuestion(e.target.value)}
-                                    placeholder={t.askPlaceholder || "Ask about this document..."}
-                                    className="flex-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors shadow-sm"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={loading || !customQuestion.trim()}
-                                    className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center disabled:opacity-50 shadow-md shadow-primary/20"
-                                >
-                                    <span className="material-symbols-rounded">send</span>
-                                </button>
-                            </form>
-                        </div>
-                    </>
-                )}
-
-                {/* Draft Editor Section - Only in Draft Mode */}
-                {viewMode === 'draft' && (
-                    <div className="animate-slide-up">
                         <div className="flex items-center justify-between mb-3 px-1">
                             <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                 {selectedPath === 'fill' ? 'Guidance & Tutorial' : 'Draft Editor'}
@@ -336,8 +345,25 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         )}
 
+                        {/* Suggestion Shortcuts before Chat Input */}
+                        <div className="mt-4">
+                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t.nextSteps || "Quick Actions"}</h4>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {responsePaths.map((path) => (
+                                    <button
+                                        key={path.id}
+                                        onClick={() => handleGenerate(path.label)}
+                                        className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 hover:border-primary text-gray-700 dark:text-gray-300 text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5 transition-colors"
+                                    >
+                                        <span className="material-symbols-rounded text-sm">{path.icon}</span>
+                                        {path.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Ask a Question Section - Chat Interface */}
-                        <div className="mt-4 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm relative z-30">
+                        <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm relative z-30">
                             {chatLog.length > 0 && (
                                 <div className="mb-4 space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                                     {chatLog.map((msg, i) => (

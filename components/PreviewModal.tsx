@@ -10,6 +10,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, imageSrc, on
     if (!isOpen || !imageSrc) return null;
 
     const isPdf = imageSrc.startsWith('data:application/pdf');
+    const isText = imageSrc.startsWith('data:text/plain');
 
     return (
         <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 animate-fade-in">
@@ -26,6 +27,10 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, imageSrc, on
                         className="w-full h-full bg-white"
                         title="Document Preview"
                     />
+                ) : isText ? (
+                    <div className="w-full h-full bg-white text-gray-800 p-6 overflow-y-auto whitespace-pre-wrap font-mono text-sm leading-relaxed">
+                        {decodeURIComponent(escape(window.atob(imageSrc.split(',')[1] || '')))}
+                    </div>
                 ) : (
                     <img
                         src={imageSrc}

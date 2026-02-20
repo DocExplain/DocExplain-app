@@ -23,7 +23,7 @@ export interface AnalysisResult {
   }[];
   fullText?: string;
   originalDoc?: {
-    type: 'image' | 'pdf';
+    type: 'image' | 'pdf' | 'text';
     data: string; // base64
     mimeType: string;
   };

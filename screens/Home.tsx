@@ -245,6 +245,13 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
           data: imageBase64Data,
           mimeType: imageBase64Data.startsWith('JVBER') ? 'application/pdf' : 'image/jpeg'
         };
+      } else if (selectedFile && !selectedFile.type.includes('image') && !selectedFile.type.includes('pdf')) {
+        const textContent = await selectedFile.text();
+        result.originalDoc = {
+          type: 'text',
+          data: window.btoa(unescape(encodeURIComponent(textContent))),
+          mimeType: 'text/plain'
+        };
       }
 
       onAnalysisComplete(result);

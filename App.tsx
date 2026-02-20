@@ -65,7 +65,16 @@ const App: React.FC = () => {
           />
         ) : null;
       case Screen.HISTORY:
-        return <History items={history} />;
+        return <History
+          items={history}
+          onView={(item) => {
+            setAnalysisResult(item);
+            setCurrentScreen(Screen.RESULT);
+          }}
+          onDelete={(item) => {
+            setHistory(prev => prev.filter(i => i !== item));
+          }}
+        />;
       case Screen.FAQ:
         return <FAQ />;
       case Screen.PAYWALL:

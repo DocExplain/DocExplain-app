@@ -87,9 +87,15 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
             // Uses 'Professional' tone by default now as buttons are removed, or we could pass 'Tutor' for forms implicitly
             // Actually api/draft.ts logic for 'Form Filling Data' ignores tone largely and uses its own style.
             const text = await generateDraft(context, tone, template, lang);
-            setDraft(text);
+
+            if (query) {
+                setDraft(prev => prev + `\n\n--- ${query} ---\n\n${text}`);
+                setCustomQuestion('');
+            } else {
+                setDraft(text);
+            }
         } catch {
-            setDraft('Could not generate draft. Please try again.');
+            if (!query) setDraft('Could not generate draft. Please try again.');
         }
         setLoading(false);
     };
@@ -175,11 +181,17 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             >
                                 {result.originalDoc ? (
                                     <>
-                                        <img
-                                            src={`data:${result.originalDoc.mimeType};base64,${result.originalDoc.data}`}
-                                            alt="Document"
-                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                                        />
+                                        {result.originalDoc.mimeType === 'text/plain' ? (
+                                            <div className="w-full h-full p-4 overflow-y-auto bg-white/90 dark:bg-black/90 text-[10px] font-mono text-gray-800 dark:text-gray-300 whitespace-pre-wrap opacity-80 group-hover:opacity-100 transition-opacity">
+                                                {decodeURIComponent(escape(window.atob(result.originalDoc.data))).substring(0, 800)}...
+                                            </div>
+                                        ) : (
+                                            <img
+                                                src={`data:${result.originalDoc.mimeType};base64,${result.originalDoc.data}`}
+                                                alt="Document"
+                                                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                                            />
+                                        )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="material-symbols-rounded text-white text-sm drop-shadow-md">visibility</span>
@@ -291,13 +303,21 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         </div>
 
-                        {loading ? (
+                        {loading && !draft ? (
                             <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center min-h-[200px]">
                                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">{t.generating}</p>
                             </div>
                         ) : (
-                            <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                            <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm relative">
+                                {loading && draft && (
+                                    <div className="absolute inset-0 bg-white/50 dark:bg-surface-dark/50 z-10 flex items-center justify-center backdrop-blur-[1px]">
+                                        <div className="bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg flex items-center gap-2">
+                                            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t.generating}</span>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
                                     <p className="text-sm text-gray-900 dark:text-white font-medium">
                                         Topic: {responsePaths.find(p => p.id === selectedPath)?.label}

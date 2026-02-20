@@ -60,9 +60,11 @@ export default async function handler(req: Request) {
         } else if (template.startsWith('Question:')) {
             taskInstructions = `
 - Answer the following user question based ONLY on the provided document: ${template.replace('Question:', '')}
-- Provide a clear, direct answer. If the answer is not in the document, say you don't know based on the provided text.`;
+- Provide a clear, direct answer. If the answer is not in the document, say you don't know based on the provided text.
+- If you use complex administrative, medical, or legal terms, EXPLAIN THEM IMMEDIATELY IN PARENTHESES in simpler words. (e.g., "Mise en demeure (a formal demand to pay)").`;
         } else {
-            taskInstructions = `- Generate a highly professional, formal response draft based on the document content and the task: ${template}.`;
+            taskInstructions = `- Generate a highly professional, formal response draft based on the document content and the task: ${template}.
+- The document might be addressed TO the user. If you are drafting a response to the sender, WRITE AS THE USER addressing the sender (first person "I", "We"). DO NOT reply as if the user is replying to themselves.`;
         }
 
         const systemPrompt = `You are DocuMate, a helpful legal assistant.
@@ -80,7 +82,7 @@ IMPORTANT:
 
 You must return a JSON object with:
 1. "draft": The generated response/answer.
-2. "explanation": A very simple explanation of what this says.
+2. "explanation": A very simple explanation of what this says. If you summarize or explain something, make sure to EXPLAIN complex words in parentheses. Do NOT use legal jargon. Keep it extremely simple for someone who doesn't understand administration.
 3. "disclaimer": A standard reminder that this is AI-generated.`;
 
         // Smart Logic: Gemini preferred for Forms (Deep Analysis) or Long Text

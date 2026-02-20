@@ -4,9 +4,11 @@ import { useLanguage } from '../i18n/LanguageContext';
 
 interface HistoryProps {
   items: AnalysisResult[];
+  onView: (item: AnalysisResult) => void;
+  onDelete: (item: AnalysisResult) => void;
 }
 
-export const History: React.FC<HistoryProps> = ({ items }) => {
+export const History: React.FC<HistoryProps> = ({ items, onView, onDelete }) => {
   const { t } = useLanguage();
   // Mock items if empty for UI demonstration
   const displayItems = items.length > 0 ? items : [
@@ -66,7 +68,7 @@ export const History: React.FC<HistoryProps> = ({ items }) => {
           <div key={idx} className="group flex flex-col bg-white dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700/50">
             <div className="flex items-start gap-4">
               <div className={`flex-shrink-0 size-12 rounded-lg flex items-center justify-center ${item.fileName.endsWith('pdf') ? 'bg-red-50 dark:bg-red-900/20 text-red-500' :
-                  item.fileName.endsWith('docx') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-500' : 'bg-purple-50 dark:bg-purple-900/20 text-purple-500'
+                item.fileName.endsWith('docx') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-500' : 'bg-purple-50 dark:bg-purple-900/20 text-purple-500'
                 }`}>
                 <span className="material-symbols-rounded text-2xl">
                   {item.fileName.endsWith('pdf') ? 'picture_as_pdf' : 'description'}
@@ -80,11 +82,11 @@ export const History: React.FC<HistoryProps> = ({ items }) => {
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{item.summary}</p>
 
                 <div className="mt-4 flex items-center justify-end gap-3 border-t border-gray-50 dark:border-gray-700 pt-3">
-                  <button className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors">
+                  <button onClick={() => onDelete(item)} className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors">
                     <span className="material-symbols-rounded text-sm">delete</span>
                     Delete
                   </button>
-                  <button className="flex items-center gap-1 text-xs font-medium text-primary bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+                  <button onClick={() => onView(item)} className="flex items-center gap-1 text-xs font-medium text-primary bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
                     <span className="material-symbols-rounded text-sm">visibility</span>
                     View
                   </button>

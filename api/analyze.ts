@@ -6,20 +6,24 @@ export const config = {
     runtime: "edge",
 };
 
-const JSON_PROMPT = `You are a legal and administrative assistant AI named DocuMate. Analyze the provided document.
+const JSON_PROMPT = `You are a pedagogical and administrative assistant AI named DocuMate. Analyze the provided document.
 Output MUST be in the user's language unless specified otherwise.
 CRITICAL: You are an assistant helping users understand their documents. Do not give direct medical or legal advice (like "take this pill" or "sue this person"), but DO explain and simplify complex administrative, medical, or legal terms found in the document.
-NEVER tell the user to pay a bill, do NOT mention payments or suggest anything about paying, as payment is not supported in this app.
+Be careful for bills, user has to make sure it's a legitimate bill before you advise to pay the bill on time or not (check for scam or legitimacy).
 Return a JSON object with:
-- "summary": 2-3 sentences plain English summary
-- "keyPoints": array of 5 key points
+- "summary": 2-3 sentences plain English OVERALL summary. If there are jargon terms, explain them in parentheses.
+- "keyPoints": array of 5 key points, more if the document is long (more than 2 pages, adapt)
 - "warning": potential risks or "null" if none
 - "category": one of ["bill", "form", "scam", "legal", "other"]
 - "suggestedActions": array of {type, label, description}
-  - type: one of ["contact", "fill", "dispute", "ignore", "clarify"]
+  - type: one of ["contact", "fill", "dispute", "ignore", "ask for clarifications"] if relevant
   - label: short action button text (3 words max) e.g., "Contest", "Ask for delay", "Provide details".
   - description: why this action is recommended.
-- "extractedText": THE FULL, EXACT TEXT CONTENT of the document (OCR). This is MANDATORY. If the document is legible, you MUST transcribe all text here.
+- "pages": An array of objects, one for each page in the document. Each object MUST contain:
+  - "pageNumber": integer starting from 1
+  - "summary": a brief summary of THIS SPECIFIC PAGE
+  - "extractedText": THE FULL, EXACT TEXT CONTENT (OCR) of THIS SPECIFIC PAGE. This is MANDATORY.
+- "extractedText": THE FULL, EXACT TEXT CONTENT of the ENTIRE document (as a fallback).
 - "isLegible": boolean (true if document content is readable, false if too blurry/dark/cutoff)
 - "illegibleReason": string ("null" if legible, otherwise short explanation in user's language e.g. "Image too blurry")`;
 
@@ -83,11 +87,23 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
                                 required: ["type", "label", "description"]
                             }
                         },
+                        pages: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    pageNumber: { type: "integer" },
+                                    summary: { type: "string" },
+                                    extractedText: { type: "string" }
+                                },
+                                required: ["pageNumber", "summary", "extractedText"]
+                            }
+                        },
                         isLegible: { type: "boolean" },
                         illegibleReason: { type: "string" },
                         extractedText: { type: "string" }
                     },
-                    required: ["summary", "keyPoints", "category", "suggestedActions", "isLegible", "illegibleReason", "extractedText"]
+                    required: ["summary", "keyPoints", "category", "suggestedActions", "pages", "isLegible", "illegibleReason", "extractedText"]
                 }
             }
         });
@@ -179,18 +195,22 @@ export default async function handler(req: Request) {
 
         console.log(`Primary selection: ${primaryModel} (isImage: ${isImage}, length: ${contextAndText.length})`);
 
-        let result;
-        let errors = [];
+        let finalModel = "none";
+        let result: any;
+        let errors: string[] = [];
 
         // Try Primary
         try {
             if (primaryModel === "gemini" && geminiKey) {
                 result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey);
+                finalModel = "gemini-2.0-flash";
             } else if (openaiKey) {
                 result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey);
+                finalModel = "gpt-4o-mini";
             } else if (geminiKey) {
-                // Fallback if primary key missing
+                // Fallback if primary key missing but gemini available
                 result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey);
+                finalModel = "gemini-2.0-flash";
             }
         } catch (e: any) {
             console.error(`Primary model (${primaryModel}) failed:`, e.message);
@@ -203,8 +223,10 @@ export default async function handler(req: Request) {
             try {
                 if (secondaryModel === "gemini" && geminiKey) {
                     result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey);
+                    finalModel = "gemini-2.0-flash (fallback)";
                 } else if (openaiKey) {
                     result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey);
+                    finalModel = "gpt-4o-mini (fallback)";
                 }
             } catch (e: any) {
                 console.error(`Secondary model (${secondaryModel}) failed:`, e.message);
@@ -220,12 +242,13 @@ export default async function handler(req: Request) {
             ...result,
             fileName,
             fullText: result.extractedText || contextAndText,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            modelUsed: finalModel
         }), {
             headers: {
                 ...CORS_HEADERS,
                 'Content-Type': 'application/json',
-                'X-Model-Used': result ? (result.fallback ? secondaryModel : primaryModel) : 'none'
+                'X-Model-Used': finalModel
             }
         });
 

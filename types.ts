@@ -29,6 +29,11 @@ export interface AnalysisResult {
   };
   isLegible?: boolean;
   illegibleReason?: string;
+  pages?: {
+    pageNumber: number;
+    summary: string;
+    extractedText: string;
+  }[];
 }
 
 export interface DraftRequest {

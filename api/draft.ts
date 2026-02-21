@@ -40,11 +40,11 @@ export default async function handler(req: Request) {
 - IDENTIFY every single field that needs to be filled.
 - OUTPUT FORMAT: Provide a list where each item represents a field.
 - Format each item EXACTLY as: "Nom du champ : [Explication claire sur ce qui est attendu et où trouver l'info]"
-- DO NOT just copy the form with placeholders. You must EXPLAIN what is needed for each field.
+- DO NOT just copy the form with placeholders. You must EXPLAIN what is needed for each field and where to find the information (outside classics like name, surname, birthdate, gender).
 - If the document already contains the info (e.g., your name, address, or an ID number found in the context), mention it explicitly (e.g. "Vous pouvez trouver ce numéro en haut à droite du document : 12345").
 - Use a "Guide / Tutorial" style, addressing the user directly.
 - Tone: Pedagogical, clear, helpful.`;
-        } else if (template === 'Clarify') {
+        } else if (template === 'Ask for clarifications') {
             taskInstructions = `
 - Identify complex, vague, or ambiguous points in the document.
 - Draft a formal message to the sender/administration asking for specific clarifications on those points.`;
@@ -64,7 +64,7 @@ export default async function handler(req: Request) {
 ${currentDraft || "No draft exists yet"}
 """
 - Analyze the user's request. If they are asking a question about the document or the topic, answer it clearly in the "chatResponse" field and return the CURRENT DRAFT exactly as it is in the "draft" field.
-- If they are asking you to modify the draft (e.g. "make it shorter", "add my address"), rewrite the draft accordingly and return it in the "draft" field. In the "chatResponse" field, briefly confirm what you changed.
+- If they are asking you to modify the draft (e.g. "make it shorter", "add my address"), rewrite the draft accordingly and return it in the "draft" field not the "chatResponse" field. In the "chatResponse" field, briefly confirm what you changed.
 - Vulgarize and simplify complex administrative, medical, or legal terms. You are an assistant helping users understand their documents.
 - If you use complex terms in "chatResponse", EXPLAIN THEM IMMEDIATELY IN PARENTHESES.`;
         } else {
@@ -132,14 +132,19 @@ You must return a JSON object with:
             return completion.choices[0].message.content;
         };
 
+        let finalModel = "none";
+
         // Execution
         try {
             if (primaryModel === "gemini" && geminiKey) {
                 result = await callGemini(context);
+                finalModel = "gemini-2.0-flash";
             } else if (openaiKey) {
                 result = await callOpenAI(context);
+                finalModel = "gpt-4o-mini";
             } else if (geminiKey) {
                 result = await callGemini(context);
+                finalModel = "gemini-2.0-flash";
             }
         } catch (e: any) {
             console.error(`Primary draft model (${primaryModel}) failed:`, e);
@@ -150,8 +155,10 @@ You must return a JSON object with:
             try {
                 if (secondaryModel === "gemini" && geminiKey) {
                     result = await callGemini(context);
+                    finalModel = "gemini-2.0-flash (fallback)";
                 } else if (openaiKey) {
                     result = await callOpenAI(context);
+                    finalModel = "gpt-4o-mini (fallback)";
                 }
             } catch (e: any) {
                 console.error(`Secondary draft model (${secondaryModel}) failed:`, e);
@@ -161,11 +168,15 @@ You must return a JSON object with:
 
         if (!result) throw new Error(`Draft generation failed. Errors: ${errors.join(' | ')}`);
 
-        return new Response(result, {
+        // Inject modelUsed into the result JSON
+        const parsedResult = JSON.parse(result);
+        parsedResult.modelUsed = finalModel;
+
+        return new Response(JSON.stringify(parsedResult), {
             headers: {
                 ...CORS_HEADERS,
                 'Content-Type': 'application/json',
-                'X-Model-Used': result ? (errors.length > 0 ? secondaryModel : primaryModel) : 'none'
+                'X-Model-Used': finalModel
             }
         });
 

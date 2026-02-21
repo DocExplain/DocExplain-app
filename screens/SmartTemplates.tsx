@@ -42,20 +42,19 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     const templateMap: Record<ResponsePath, string> = {
         extension: 'Extension',
         dispute: 'Dispute',
-        clarify: 'Clarify',
+        clarify: 'Ask for clarifications',
         accept: 'Accept',
         fill: 'Form Filling Data',
     };
 
     const getInitialPath = (): ResponsePath => {
         if (!initialAction) return 'extension';
-        switch (initialAction.type) {
-            case 'dispute': return 'dispute';
-            case 'clarify': return 'clarify';
-            case 'fill': return 'fill';
-            case 'pay': return 'accept';
-            default: return 'extension';
-        }
+        const typeStr = initialAction.type?.toLowerCase() || '';
+        if (typeStr.includes('dispute')) return 'dispute';
+        if (typeStr.includes('clarify') || typeStr.includes('clarifications')) return 'clarify';
+        if (typeStr.includes('fill')) return 'fill';
+        if (typeStr.includes('pay') || typeStr.includes('accept')) return 'accept';
+        return 'extension';
     };
 
     const [viewMode, setViewMode] = useState<'analysis' | 'draft'>('analysis');
@@ -64,6 +63,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     const [chatLog, setChatLog] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
     const [customQuestion, setCustomQuestion] = useState('');
     const [loading, setLoading] = useState(false);
+    const [currentPageIndex, setCurrentPageIndex] = useState(0);
     // Tone removed per user request, defaulting to 'Professional' internally if needed or just redundant
     const [tone, setTone] = useState<'Professional' | 'Friendly' | 'Firm'>('Professional');
 
@@ -222,22 +222,47 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         </div>
 
-                        {/* 2. Analysis Summary Card */}
+                        {/* 2. Analysis Summary Card (Paginated) */}
                         <div className="rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden mb-6">
                             <div className="p-5">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span className="material-symbols-rounded text-primary">auto_awesome</span>
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">AI Summary</h3>
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-rounded text-primary">auto_awesome</span>
+                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">AI Summary</h3>
+                                    </div>
+                                    {result.pages && result.pages.length > 1 && (
+                                        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-full px-2 py-1">
+                                            <button
+                                                onClick={() => setCurrentPageIndex(p => Math.max(0, p - 1))}
+                                                disabled={currentPageIndex === 0}
+                                                className="p-1 rounded-full text-gray-500 hover:text-primary disabled:opacity-30 disabled:hover:text-gray-500 transition-colors"
+                                            >
+                                                <span className="material-symbols-rounded text-sm">chevron_left</span>
+                                            </button>
+                                            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                                                Page {currentPageIndex + 1} / {result.pages.length}
+                                            </span>
+                                            <button
+                                                onClick={() => setCurrentPageIndex(p => Math.min((result.pages?.length || 1) - 1, p + 1))}
+                                                disabled={currentPageIndex === (result.pages?.length || 1) - 1}
+                                                className="p-1 rounded-full text-gray-500 hover:text-primary disabled:opacity-30 disabled:hover:text-gray-500 transition-colors"
+                                            >
+                                                <span className="material-symbols-rounded text-sm">chevron_right</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
-                                    {result.summary || "No summary available."}
+                                    {result.pages && result.pages.length > 0
+                                        ? result.pages[currentPageIndex].summary
+                                        : (result.summary || "No summary available.")}
                                 </p>
 
-                                {/* Key Points */}
-                                {result.keyPoints && result.keyPoints.length > 0 && (
-                                    <div className="space-y-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
-                                        {result.keyPoints.slice(0, 3).map((point, i) => (
+                                {/* Key Points - show only on the first page or if not paginated */}
+                                {(!result.pages || currentPageIndex === 0) && result.keyPoints && result.keyPoints.length > 0 && (
+                                    <div className="space-y-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 mb-4">
+                                        {result.keyPoints.map((point, i) => (
                                             <div key={i} className="flex gap-2 items-start">
                                                 <span className="text-primary mt-1 text-[10px]">●</span>
                                                 <p className="text-gray-700 dark:text-gray-300 text-xs">{point}</p>
@@ -246,7 +271,36 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                                     </div>
                                 )}
 
-                                <p className="text-gray-400 text-[10px] mt-3 text-right">Analyzed on {formatDate()}</p>
+                                {/* Extracted Text Transcription for the current page */}
+                                {result.pages && result.pages.length > 0 && result.pages[currentPageIndex].extractedText && (
+                                    <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="material-symbols-rounded text-xs text-gray-400">subject</span>
+                                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Transcription</h4>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-black/20 rounded-lg p-3 max-h-48 overflow-y-auto">
+                                            <p className="text-[10px] font-mono whitespace-pre-wrap text-gray-600 dark:text-gray-400">
+                                                {result.pages[currentPageIndex].extractedText}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!result.pages && result.fullText && (
+                                    <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="material-symbols-rounded text-xs text-gray-400">subject</span>
+                                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Transcription</h4>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-black/20 rounded-lg p-3 max-h-48 overflow-y-auto">
+                                            <p className="text-[10px] font-mono whitespace-pre-wrap text-gray-600 dark:text-gray-400">
+                                                {result.fullText}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <p className="text-gray-400 text-[10px] mt-4 text-right">Analyzed on {formatDate()}</p>
                             </div>
                         </div>
 

@@ -1,8 +1,12 @@
 INFOS DE SIGNATURE ANDROID - DOCUMATE (ORIGINAL - GOOGLE PLAY)
 -----------------------------------------------------------
 
-REMARQUE : Nous avons retrouvé la clé originale utilisée lors de la toute première publication !
-Google Play acceptera ce fichier sans erreur.
+DERNIÈRE MISE À JOUR : Changement du Package Name pour "com.documate.app"
+et incrémentation de la Version à 2.
+
+Packge Name : com.documate.app
+Version Code : 3
+Version Name : 1.2
 
 Fichier Keystore : c:\Users\nicol\Downloads\documate\documate-release.jks
 Mot de passe Keystore : DocuMate2024!

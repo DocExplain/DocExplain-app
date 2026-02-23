@@ -27,16 +27,14 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
 
     const responsePaths = allResponsePaths.filter(path => {
         const cat = result.category?.toLowerCase() || '';
-        // UI CLEANUP per user request: if it's a form, basically only show "fill" 
-        // and avoid "clarify" and "accept" which are less relevant
-        if (cat === 'form') {
-            return path.id === 'fill';
+        // Updated for v1.3 universal categories
+        if (['identity', 'education', 'social'].includes(cat) && path.id !== 'clarify') {
+            return path.id === 'fill'; // identity/education forms → fill
         }
-
-        if (path.id === 'fill') return cat === 'form';
-        if (path.id === 'dispute') return ['bill', 'legal', 'lease', 'scam'].includes(cat);
-        if (path.id === 'extension') return ['bill', 'legal', 'lease', 'medical'].includes(cat);
-        return true; // clarify and accept always shown for non-forms
+        if (path.id === 'fill') return ['identity', 'education', 'social'].includes(cat);
+        if (path.id === 'dispute') return ['taxation', 'finance', 'legal', 'housing', 'transport'].includes(cat);
+        if (path.id === 'extension') return ['taxation', 'finance', 'legal', 'housing'].includes(cat);
+        return true; // clarify and accept always shown
     });
 
     const templateMap: Record<ResponsePath, string> = {
@@ -89,10 +87,16 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
 
             if (query) {
                 const newChatResponse = responseData.chatResponse || responseData.explanation || "Done.";
-                setChatLog(prev => [...prev, { role: 'user', content: query }, { role: 'ai', content: newChatResponse }]);
-                if (responseData.draft && responseData.draft !== draft) {
+                const newEntries: { role: 'user' | 'ai', content: string }[] = [
+                    { role: 'user', content: query },
+                    { role: 'ai', content: newChatResponse },
+                ];
+                // If a draft was generated from the question (user asked to write a mail), show it in chat
+                if (responseData.draft && responseData.draft !== draft && responseData.draft.length > 50) {
+                    newEntries.push({ role: 'ai', content: `📝 ${t.generatedDraft}:\n\n${responseData.draft}` });
                     setDraft(responseData.draft);
                 }
+                setChatLog(prev => [...prev, ...newEntries]);
                 setCustomQuestion('');
             } else {
                 setDraft(responseData.draft || "");
@@ -296,6 +300,53 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         </div>
 
+                        {/* AI Suggested Action Buttons - shown in analysis mode */}
+                        {result.suggestedActions && result.suggestedActions.length > 0 && (
+                            <div className="mb-4">
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.nextSteps}</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {result.suggestedActions.map((action, i) => {
+                                        const severityColors = {
+                                            high: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-700 dark:text-red-300',
+                                            medium: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300',
+                                            low: 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300',
+                                        };
+                                        const colors = severityColors[(action.severity as keyof typeof severityColors)] || severityColors.low;
+                                        const iconMap: Record<string, string> = {
+                                            contact: 'call', fill: 'edit_square', dispute: 'gavel',
+                                            ignore: 'check_circle', verify: 'fact_check', archive: 'inventory_2',
+                                            'ask for clarifications': 'help',
+                                        };
+                                        const icon = iconMap[action.type] || 'arrow_forward';
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => {
+                                                    // Map AI action to a response path and switch to draft mode
+                                                    const type = action.type?.toLowerCase() || '';
+                                                    if (type.includes('fill')) { onSelectPath('fill'); }
+                                                    else if (type.includes('dispute')) { onSelectPath('dispute'); }
+                                                    else if (type.includes('clarif')) { onSelectPath('clarify'); }
+                                                    else {
+                                                        // For actions not in the standard list, use the action label as template
+                                                        setSelectedPath('clarify');
+                                                        setViewMode('draft');
+                                                    }
+                                                }}
+                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all active:scale-95 ${colors}`}
+                                            >
+                                                <span className="material-symbols-rounded text-base">{icon}</span>
+                                                <div className="text-left">
+                                                    <p className="font-semibold text-xs">{action.label}</p>
+                                                    <p className="text-[10px] opacity-70 mt-0.5">{action.description}</p>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Key Dates */}
                         {result.keyDates && result.keyDates.length > 0 && (
                             <div className="rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 p-4 mb-4 animate-fade-in">
@@ -380,8 +431,8 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                                     {chatLog.map((msg, i) => (
                                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                             <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
-                                                    ? 'bg-primary text-white rounded-br-sm'
-                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm'
+                                                ? 'bg-primary text-white rounded-br-sm'
+                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm'
                                                 }`}>
                                                 <p className="whitespace-pre-wrap">{msg.content}</p>
                                             </div>

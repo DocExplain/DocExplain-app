@@ -61,16 +61,34 @@ CRITICAL: DO NOT prefill the form with mock data (like "Votre Nom"). EXPLAIN wha
 - Draft a formal request for a deadline extension (14-30 days).
 - Cite the complexity of the document and the need for more time to prepare a complete response.`;
         } else if (template.startsWith('Question:')) {
-            taskInstructions = `
-- The user has a follow-up request: "${template.replace('Question:', '')}"
+            const userMessage = template.replace('Question:', '').trim();
+            // Detect if the user wants to WRITE something (mail, letter, response)
+            const writingKeywords = /\b(mail|email|e-mail|lettre|letter|écrire|ecrire|rédiger|rediger|write|draft|brouillon|contester|contest|disputer|répondre|repondre|respond|reply)\b/i;
+            const wantsToWrite = writingKeywords.test(userMessage);
+
+            if (wantsToWrite) {
+                taskInstructions = `
+- The user wants to WRITE a response: "${userMessage}"
+- IMMEDIATELY generate a complete, ready-to-copy email or letter in the "draft" field.
+- Use the document details (amounts, dates, sender name, reference numbers) from the context.
+- If the user expresses disagreement ("too expensive", "already paid", "scam"), use those arguments in the letter.
+- DO NOT ask "What do you want to say?". DO NOT add preamble. Write the text NOW.
+- FORMAT: Professional formal email/letter. Address the sender of the document.
+- WRITE AS THE USER (first person "I", "We").
+- In "chatResponse", briefly confirm: "Here is your draft email."
+- TONE: Firm but polite, using ${lang} administrative style.`;
+            } else {
+                taskInstructions = `
+- The user has a follow-up question: "${userMessage}"
 - Here is the CURRENT DRAFT document they are editing:
 """
 ${currentDraft || "No draft exists yet"}
 """
-- Analyze the user's request. If they are asking a question about the document or the topic, answer it clearly in the "chatResponse" field and return the CURRENT DRAFT exactly as it is in the "draft" field.
-- If they are asking you to modify the draft (e.g. "make it shorter", "add my address"), rewrite the draft accordingly and return it in the "draft" field not the "chatResponse" field. In the "chatResponse" field, briefly confirm what you changed.
-- Vulgarize and simplify complex administrative, medical, or legal terms. You are an assistant helping users understand their documents.
-- If you use complex terms in "chatResponse", EXPLAIN THEM IMMEDIATELY IN PARENTHESES.`;
+- If they are asking a QUESTION about the document, answer clearly in "chatResponse". Return the current draft unchanged in "draft".
+- If they are asking to MODIFY the draft, rewrite it and return in "draft". In "chatResponse" confirm what you changed.
+- Simplify complex administrative, medical, or legal terms. Explain jargon in parentheses.
+- SELF-CHECK: Before responding, verify if the user asked for a written document. If yes, produce it immediately in "draft".`;
+            }
         } else {
             taskInstructions = `- Generate a highly professional, formal response draft based on the document content and the task: ${template}.
 - The document might be addressed TO the user. If you are drafting a response to the sender, WRITE AS THE USER addressing the sender (first person "I", "We"). DO NOT reply as if the user is replying to themselves.`;

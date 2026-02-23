@@ -18,9 +18,9 @@ const getOpenAIClient = () => {
 const API_URL = import.meta.env.VITE_API_URL || 'https://doc-explain-app.vercel.app';
 
 export const explainDocument = async (contextAndText: string, fileName: string, lang: string, imageBase64?: string, country?: string, region?: string): Promise<AnalysisResult> => {
-    console.log(`[Orchestrator] Starting analysis. Context len: ${contextAndText.length}, Image present: ${!!imageBase64}`);
+    console.log(`[Orchestrator] Starting analysis. Context len: ${contextAndText.length}, Image present: ${!!imageBase64}, Country: ${country || 'N/A'}, Region: ${region || 'N/A'}`);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
     try {
         console.log(`[Orchestrator] Fetching ${API_URL}/api/analyze...`);
@@ -54,9 +54,9 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
 };
 
 export const generateDraft = async (summary: string, tone: string, template: string, lang: string, currentDraft?: string, country?: string, region?: string): Promise<{ draft: string, explanation?: string, chatResponse?: string }> => {
-    console.log(`[Orchestrator] Generating draft. Template: ${template}`);
+    console.log(`[Orchestrator] Generating draft. Template: ${template}, Country: ${country || 'N/A'}`);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
 
     try {
         const response = await fetch(`${API_URL}/api/draft`, {

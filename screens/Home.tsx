@@ -509,7 +509,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
 
           <div>
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 ml-1">
-              {t.country === 'Country' ? 'Specific Jurisdiction' : 'Juridiction Spécifique'} <span className="text-gray-300 font-normal">(Optional)</span>
+              {t.jurisdictionPlaceholder ? t.regionPlaceholder : 'Specific Jurisdiction'} <span className="text-gray-300 font-normal">(Optional)</span>
             </label>
             <input
               type="text"
@@ -536,7 +536,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 ml-1">Additional Context / Questions</label>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 ml-1">{t.contextPlaceholderFile ? t.pasteLabel : 'Additional Context / Questions'}</label>
             <textarea
               value={context}
               onChange={(e) => setContext(e.target.value)}

@@ -19,9 +19,11 @@ export interface AnalysisResult {
   timestamp: string;
   category?: 'identity' | 'employment' | 'taxation' | 'health' | 'legal' | 'housing' | 'education' | 'social' | 'finance' | 'transport' | 'other';
   suggestedActions?: {
-    type: 'pay' | 'fill' | 'dispute' | 'ignore' | 'clarify';
+    type: string;
     label: string;
     description: string;
+    format?: 'letter' | 'checklist' | 'security_alert' | 'step_by_step' | 'archive_nudge';
+    severity?: 'low' | 'medium' | 'high';
   }[];
   fullText?: string;
   originalDoc?: {

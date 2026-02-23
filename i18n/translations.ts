@@ -57,6 +57,10 @@ export interface TranslationStrings {
     countryBE: string; countryAT: string; countrySE: string; countryNO: string; countryDK: string;
     countryFI: string; countryIE: string; countryIN: string; countrySG: string; countryJP: string;
     countryBR: string; countryMX: string;
+    // v1.3 UI translations
+    analysisResult: string; documentUnclear: string; keyDatesLabel: string;
+    localContext: string; lexicon: string; analyzingDocument: string;
+    privateSecure: string; noActionNeeded: string;
 }
 
 const en: TranslationStrings = {
@@ -107,6 +111,11 @@ const en: TranslationStrings = {
     countryBE: "Belgium", countryAT: "Austria", countrySE: "Sweden", countryNO: "Norway", countryDK: "Denmark",
     countryFI: "Finland", countryIE: "Ireland", countryIN: "India", countrySG: "Singapore", countryJP: "Japan",
     countryBR: "Brazil", countryMX: "Mexico",
+    analysisResult: "Analysis Result", documentUnclear: "Document may be unclear",
+    keyDatesLabel: "Key Dates & Deadlines", localContext: "Local Context",
+    lexicon: "Glossary", analyzingDocument: "Analyzing your document…",
+    privateSecure: "Private & Secure: We do not store your data. All documents are processed securely and discarded immediately.",
+    noActionNeeded: "No action needed",
 };
 
 const fr: TranslationStrings = {
@@ -157,6 +166,11 @@ const fr: TranslationStrings = {
     countryBE: "Belgique", countryAT: "Autriche", countrySE: "Suède", countryNO: "Norvège", countryDK: "Danemark",
     countryFI: "Finlande", countryIE: "Irlande", countryIN: "Inde", countrySG: "Singapour", countryJP: "Japon",
     countryBR: "Brésil", countryMX: "Mexique",
+    analysisResult: "Résultat de l'analyse", documentUnclear: "Le document est peut-être illisible",
+    keyDatesLabel: "Dates clés et échéances", localContext: "Contexte local",
+    lexicon: "Lexique", analyzingDocument: "Analyse de votre document en cours…",
+    privateSecure: "Privé et sécurisé : Nous ne stockons pas vos données. Tous les documents sont traités de manière sécurisée et supprimés immédiatement.",
+    noActionNeeded: "Aucune action nécessaire",
 };
 
 const de: TranslationStrings = {
@@ -207,6 +221,11 @@ const de: TranslationStrings = {
     countryBE: "Belgien", countryAT: "Österreich", countrySE: "Schweden", countryNO: "Norwegen", countryDK: "Dänemark",
     countryFI: "Finnland", countryIE: "Irland", countryIN: "Indien", countrySG: "Singapur", countryJP: "Japan",
     countryBR: "Brasilien", countryMX: "Mexiko",
+    analysisResult: "Analyseergebnis", documentUnclear: "Dokument möglicherweise unleserlich",
+    keyDatesLabel: "Wichtige Termine und Fristen", localContext: "Lokaler Kontext",
+    lexicon: "Glossar", analyzingDocument: "Ihr Dokument wird analysiert…",
+    privateSecure: "Privat & Sicher: Wir speichern Ihre Daten nicht. Alle Dokumente werden sicher verarbeitet und sofort gelöscht.",
+    noActionNeeded: "Keine Aktion erforderlich",
 };
 
 const es: TranslationStrings = {
@@ -257,6 +276,11 @@ const es: TranslationStrings = {
     countryBE: "Bélgica", countryAT: "Austria", countrySE: "Suecia", countryNO: "Noruega", countryDK: "Dinamarca",
     countryFI: "Finlandia", countryIE: "Irlanda", countryIN: "India", countrySG: "Singapur", countryJP: "Japón",
     countryBR: "Brasil", countryMX: "México",
+    analysisResult: "Resultado del análisis", documentUnclear: "El documento puede estar ilegible",
+    keyDatesLabel: "Fechas clave y plazos", localContext: "Contexto local",
+    lexicon: "Glosario", analyzingDocument: "Analizando su documento…",
+    privateSecure: "Privado y seguro: No almacenamos sus datos.",
+    noActionNeeded: "No se requiere acción",
 };
 
 const it: TranslationStrings = {
@@ -307,6 +331,11 @@ const it: TranslationStrings = {
     countryBE: "Belgio", countryAT: "Austria", countrySE: "Svezia", countryNO: "Norvegia", countryDK: "Danimarca",
     countryFI: "Finlandia", countryIE: "Irlanda", countryIN: "India", countrySG: "Singapore", countryJP: "Giappone",
     countryBR: "Brasile", countryMX: "Messico",
+    analysisResult: "Risultato dell'analisi", documentUnclear: "Il documento potrebbe essere illeggibile",
+    keyDatesLabel: "Date chiave e scadenze", localContext: "Contesto locale",
+    lexicon: "Glossario", analyzingDocument: "Analisi del documento in corso…",
+    privateSecure: "Privato e sicuro: Non memorizziamo i tuoi dati.",
+    noActionNeeded: "Nessuna azione necessaria",
 };
 
 const pt: TranslationStrings = {
@@ -357,6 +386,11 @@ const pt: TranslationStrings = {
     countryBE: "Bélgica", countryAT: "Áustria", countrySE: "Suécia", countryNO: "Noruega", countryDK: "Dinamarca",
     countryFI: "Finlândia", countryIE: "Irlanda", countryIN: "Índia", countrySG: "Singapura", countryJP: "Japão",
     countryBR: "Brasil", countryMX: "México",
+    analysisResult: "Resultado da análise", documentUnclear: "O documento pode estar ilegível",
+    keyDatesLabel: "Datas-chave e prazos", localContext: "Contexto local",
+    lexicon: "Glossário", analyzingDocument: "Analisando seu documento…",
+    privateSecure: "Privado e seguro: Não armazenamos seus dados.",
+    noActionNeeded: "Nenhuma ação necessária",
 };
 
 const zh: TranslationStrings = {
@@ -407,6 +441,11 @@ const zh: TranslationStrings = {
     countryBE: "比利时", countryAT: "奥地利", countrySE: "瑞典", countryNO: "挪威", countryDK: "丹麦",
     countryFI: "芬兰", countryIE: "爱尔兰", countryIN: "印度", countrySG: "新加坡", countryJP: "日本",
     countryBR: "巴西", countryMX: "墨西哥",
+    analysisResult: "分析结果", documentUnclear: "文档可能不清晰",
+    keyDatesLabel: "关键日期和截止日", localContext: "当地背景",
+    lexicon: "术语表", analyzingDocument: "正在分析您的文档…",
+    privateSecure: "私密且安全：我们不会存储您的数据。",
+    noActionNeeded: "无需操作",
 };
 
 const hi: TranslationStrings = {
@@ -457,6 +496,11 @@ const hi: TranslationStrings = {
     countryBE: "बेल्जियम", countryAT: "ऑस्ट्रिया", countrySE: "स्वीडन", countryNO: "नार्वे", countryDK: "डेनमार्क",
     countryFI: "फिनलैंड", countryIE: "आयरलैंड", countryIN: "भारत", countrySG: "सिंगापुर", countryJP: "जापान",
     countryBR: "ब्राजील", countryMX: "मैक्सिको",
+    analysisResult: "विश्लेषण परिणाम", documentUnclear: "दस्तावेज़ अस्पष्ट हो सकता है",
+    keyDatesLabel: "महत्वपूर्ण तिथियाँ और समयसीमा", localContext: "स्थानीय संदर्भ",
+    lexicon: "शब्दकोश", analyzingDocument: "आपका दस्तावेज़ विश्लेषित किया जा रहा है…",
+    privateSecure: "निजी और सुरक्षित: हम आपका डेटा संग्रहीत नहीं करते।",
+    noActionNeeded: "कोई कार्रवाई आवश्यक नहीं",
 };
 
 const ar: TranslationStrings = {
@@ -507,6 +551,11 @@ const ar: TranslationStrings = {
     countryBE: "بلجيكا", countryAT: "النمسا", countrySE: "السويد", countryNO: "النرويج", countryDK: "الدانمارك",
     countryFI: "فنلندا", countryIE: "أيرلندا", countryIN: "الهند", countrySG: "سنغافورة", countryJP: "اليابان",
     countryBR: "البرازيل", countryMX: "المكسيك",
+    analysisResult: "نتيجة التحليل", documentUnclear: "قد يكون المستند غير واضح",
+    keyDatesLabel: "التواريخ الرئيسية والمواعيد", localContext: "السياق المحلي",
+    lexicon: "مسرد المصطلحات", analyzingDocument: "جاري تحليل مستندك…",
+    privateSecure: "خاص وآمن: لا نخزن بياناتك.",
+    noActionNeeded: "لا يلزم اتخاذ أي إجراء",
 };
 
 const ru: TranslationStrings = {
@@ -557,6 +606,11 @@ const ru: TranslationStrings = {
     countryBE: "Бельгия", countryAT: "Австрия", countrySE: "Швеция", countryNO: "Норвегия", countryDK: "Дания",
     countryFI: "Финляндия", countryIE: "Ирландия", countryIN: "Индия", countrySG: "Сингапур", countryJP: "Япония",
     countryBR: "Бразилия", countryMX: "Мексика",
+    analysisResult: "Результат анализа", documentUnclear: "Документ может быть нечитаемым",
+    keyDatesLabel: "Ключевые даты и сроки", localContext: "Местный контекст",
+    lexicon: "Глоссарий", analyzingDocument: "Анализируем ваш документ…",
+    privateSecure: "Конфиденциально и безопасно: мы не храним ваши данные.",
+    noActionNeeded: "Действия не требуются",
 };
 
 const bn: TranslationStrings = {
@@ -607,6 +661,11 @@ const bn: TranslationStrings = {
     countryBE: "বেলজিয়াম", countryAT: "অস্ট্রিয়া", countrySE: "সুইডেন", countryNO: "নরওয়ে", countryDK: "ডেনমার্ক",
     countryFI: "ফিনল্যান্ড", countryIE: "আয়ারল্যান্ড", countryIN: "ভারত", countrySG: "সিঙ্গাপুর", countryJP: "জাপান",
     countryBR: "ব্রাজিল", countryMX: "মেক্সিকো",
+    analysisResult: "বিশ্লেষণের ফলাফল", documentUnclear: "নথি অস্পষ্ট হতে পারে",
+    keyDatesLabel: "গুরুত্বপূর্ণ তারিখ ও সময়সীমা", localContext: "স্থানীয় প্রসঙ্গ",
+    lexicon: "শব্দকোষ", analyzingDocument: "আপনার নথি বিশ্লেষণ হচ্ছে…",
+    privateSecure: "ব্যক্তিগত ও নিরাপদ: আমরা আপনার তথ্য সংরক্ষণ করি না।",
+    noActionNeeded: "কোনো কার্যকরী প্রয়োজন নেই",
 };
 
 export const translations: Record<SupportedLang, TranslationStrings> = {

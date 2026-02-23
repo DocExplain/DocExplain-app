@@ -75,10 +75,10 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     const [showPreview, setShowPreview] = useState(false);
 
     useEffect(() => {
-        if (viewMode === 'draft') {
+        if (viewMode === 'draft' && !chatLog.length) {
             handleGenerate();
         }
-    }, [viewMode, selectedPath]); // Trigger when entering draft mode or changing path
+    }, [viewMode, selectedPath]);
 
     const handleGenerate = async (query?: string) => {
         setLoading(true);
@@ -127,16 +127,8 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
     const handleAskQuestion = (e: React.FormEvent) => {
         e.preventDefault();
         if (!customQuestion.trim()) return;
-
-        if (viewMode === 'analysis') {
-            setViewMode('draft');
-            // We set a small timeout so the transition happens before the generation starts
-            setTimeout(() => {
-                handleGenerate(customQuestion);
-            }, 50);
-        } else {
-            handleGenerate(customQuestion);
-        }
+        // Stay in analysis mode — just ask the question and show the answer inline
+        handleGenerate(customQuestion);
     };
 
     const formatDate = () => {
@@ -165,7 +157,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                     <span className="material-symbols-rounded text-gray-900 dark:text-white">arrow_back</span>
                 </button>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">
-                    {viewMode === 'analysis' ? 'Analysis Result' : t.draftResponse}
+                    {viewMode === 'analysis' ? t.analysisResult : t.draftResponse}
                 </h2>
             </div>
 
@@ -180,7 +172,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-4 flex items-start gap-3 animate-fade-in">
                                     <span className="material-symbols-rounded text-red-500 mt-0.5">warning</span>
                                     <div>
-                                        <h3 className="text-sm font-bold text-red-700 dark:text-red-300">Document may be unclear</h3>
+                                        <h3 className="text-sm font-bold text-red-700 dark:text-red-300">{t.documentUnclear}</h3>
                                         <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
                                             {result.illegibleReason || "The AI had trouble reading this document. Results might be inaccurate."}
                                         </p>
@@ -309,7 +301,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             <div className="rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 p-4 mb-4 animate-fade-in">
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className="material-symbols-rounded text-amber-500">calendar_clock</span>
-                                    <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300">Key Dates & Deadlines</h3>
+                                    <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300">{t.keyDatesLabel}</h3>
                                 </div>
                                 <ul className="space-y-1">
                                     {result.keyDates.map((date, i) => (
@@ -327,7 +319,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             <div className="rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 p-4 mb-4 animate-fade-in">
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className="material-symbols-rounded text-blue-500">public</span>
-                                    <h3 className="text-sm font-bold text-blue-800 dark:text-blue-300">Local Context</h3>
+                                    <h3 className="text-sm font-bold text-blue-800 dark:text-blue-300">{t.localContext}</h3>
                                 </div>
                                 <p className="text-sm text-blue-700 dark:text-blue-200 leading-relaxed">{result.regionalContext}</p>
                             </div>
@@ -338,7 +330,7 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             <div className="rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 p-4 mb-4">
                                 <div className="flex items-center gap-2 mb-3">
                                     <span className="material-symbols-rounded text-primary">menu_book</span>
-                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Lexique</h3>
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">{t.lexicon}</h3>
                                 </div>
                                 <div className="space-y-2">
                                     {result.complexTerms.map((item, i) => (
@@ -369,6 +361,34 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                                     <span className="material-symbols-rounded">send</span>
                                 </button>
                             </form>
+
+                            {/* Inline loading indicator for questions */}
+                            {loading && viewMode === 'analysis' && (
+                                <div className="flex items-center gap-2 mt-3 px-1 animate-fade-in">
+                                    <div className="flex gap-1">
+                                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                    </div>
+                                    <p className="text-xs text-gray-500">{t.generating}</p>
+                                </div>
+                            )}
+
+                            {/* Inline Chat Q&A — shown in analysis mode */}
+                            {chatLog.length > 0 && (
+                                <div className="mt-4 space-y-3">
+                                    {chatLog.map((msg, i) => (
+                                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
+                                                    ? 'bg-primary text-white rounded-br-sm'
+                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm'
+                                                }`}>
+                                                <p className="whitespace-pre-wrap">{msg.content}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </>
                 )}

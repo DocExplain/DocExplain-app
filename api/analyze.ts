@@ -31,10 +31,20 @@ Return a JSON object with:
 - "regionalContext": 1-2 sentences on specific legal nuances for the user's country/region. "null" if no country provided.
 - "warning": potential risks or "null" if none.
 - "category": one of ["identity", "employment", "taxation", "health", "legal", "housing", "education", "social", "finance", "transport", "other"].
-- "suggestedActions": array of {type, label, description}.
-  - type: one of ["contact", "fill", "dispute", "ignore", "ask for clarifications"] if relevant.
+- "suggestedActions": array of {type, label, description, format, severity}.
+  - type: one of ["contact", "fill", "dispute", "ignore", "ask for clarifications", "verify", "archive"] if relevant.
   - label: short action button text (3 words max).
   - description: why this action is recommended, in plain language.
+  - format: one of ["letter", "checklist", "security_alert", "step_by_step", "archive_nudge"].
+    - Use "checklist" for invoices/bills (verification points).
+    - Use "security_alert" for scams/suspicious documents.
+    - Use "step_by_step" for forms or administrative procedures.
+    - Use "letter" ONLY if a formal dispute or contestation is explicitly relevant.
+    - Use "archive_nudge" if no action is required (informational document).
+  - severity: one of ["low", "medium", "high"].
+    - "high" for scams, urgent deadlines, or warnings.
+    - "medium" for actions like filling a form or contacting an entity.
+    - "low" for informational items (archive, understand).
 - "pages": array of objects, one per page. Each MUST contain:
   - "pageNumber": integer starting from 1.
   - "summary": brief summary of THIS page.
@@ -113,8 +123,10 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
                                     type: { type: "string" },
                                     label: { type: "string" },
                                     description: { type: "string" },
+                                    format: { type: "string" },
+                                    severity: { type: "string" },
                                 },
-                                required: ["type", "label", "description"]
+                                required: ["type", "label", "description", "format", "severity"]
                             }
                         },
                         pages: {

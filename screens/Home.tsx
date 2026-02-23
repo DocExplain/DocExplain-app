@@ -33,6 +33,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   const [cameraBase64, setCameraBase64] = useState<string | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [fileType, setFileType] = useState<'image' | 'pdf'>('image');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Usage & Limits
   const [dailyUsage, setDailyUsage] = useState(0);
@@ -190,6 +191,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
     if (!isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota)) return;
 
     setLoading(true);
+    setIsAnalyzing(true);
 
     let textToAnalyze = "";
     let docName = "Context Analysis";
@@ -266,6 +268,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       alert(t.analyzeError);
     } finally {
       setLoading(false);
+      setIsAnalyzing(false);
     }
   };
 
@@ -576,10 +579,22 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
             </button>
           )}
 
+          {/* Loading Indicator - visible under analyze button during analysis */}
+          {isAnalyzing && (
+            <div className="flex items-center justify-center gap-3 py-4 animate-fade-in">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+              </div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{t.analyzingDocument}</p>
+            </div>
+          )}
+
           <div className="flex items-start gap-2 pt-2 px-1 opacity-70">
             <span className="material-symbols-rounded text-green-600 dark:text-green-400 text-sm mt-0.5">shield_lock</span>
             <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-snug">
-              <strong>Private & Secure:</strong> We do not store your data. All documents are processed securely and discarded immediately after analysis.
+              {t.privateSecure}
             </p>
           </div>
         </div>

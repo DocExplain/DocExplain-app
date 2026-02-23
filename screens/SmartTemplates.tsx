@@ -304,6 +304,53 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                             </div>
                         </div>
 
+                        {/* Key Dates */}
+                        {result.keyDates && result.keyDates.length > 0 && (
+                            <div className="rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 p-4 mb-4 animate-fade-in">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="material-symbols-rounded text-amber-500">calendar_clock</span>
+                                    <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300">Key Dates & Deadlines</h3>
+                                </div>
+                                <ul className="space-y-1">
+                                    {result.keyDates.map((date, i) => (
+                                        <li key={i} className="flex items-start gap-2">
+                                            <span className="text-amber-500 mt-0.5 text-xs">⏰</span>
+                                            <p className="text-sm text-amber-800 dark:text-amber-200">{date}</p>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* Regional Context */}
+                        {result.regionalContext && result.regionalContext !== 'null' && (
+                            <div className="rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 p-4 mb-4 animate-fade-in">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="material-symbols-rounded text-blue-500">public</span>
+                                    <h3 className="text-sm font-bold text-blue-800 dark:text-blue-300">Local Context</h3>
+                                </div>
+                                <p className="text-sm text-blue-700 dark:text-blue-200 leading-relaxed">{result.regionalContext}</p>
+                            </div>
+                        )}
+
+                        {/* Complex Terms Lexique */}
+                        {result.complexTerms && result.complexTerms.length > 0 && (
+                            <div className="rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 p-4 mb-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="material-symbols-rounded text-primary">menu_book</span>
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Lexique</h3>
+                                </div>
+                                <div className="space-y-2">
+                                    {result.complexTerms.map((item, i) => (
+                                        <div key={i} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                                            <p className="text-xs font-bold text-primary mb-0.5">{item.term}</p>
+                                            <p className="text-xs text-gray-600 dark:text-gray-300">{item.explanation}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-6">
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 px-1">{t.askQuestionOnDoc || "Ask a Question"}</h3>
                             <form onSubmit={handleAskQuestion} className="flex gap-2">

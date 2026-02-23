@@ -238,7 +238,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         Jurisdiction: ${country === 'Other' ? (jurisdiction || 'Custom') : country} ${country !== 'Other' && jurisdiction ? `(${jurisdiction})` : ''}
       `;
 
-      const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imageBase64Data);
+      const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imageBase64Data, country !== 'Other' ? country : undefined, jurisdiction || undefined);
 
       if (!isPro && !showAd) {
         incrementUsage();

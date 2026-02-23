@@ -17,7 +17,7 @@ const getOpenAIClient = () => {
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://doc-explain-app.vercel.app';
 
-export const explainDocument = async (contextAndText: string, fileName: string, lang: string, imageBase64?: string): Promise<AnalysisResult> => {
+export const explainDocument = async (contextAndText: string, fileName: string, lang: string, imageBase64?: string, country?: string, region?: string): Promise<AnalysisResult> => {
     console.log(`[Orchestrator] Starting analysis. Context len: ${contextAndText.length}, Image present: ${!!imageBase64}`);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
@@ -27,7 +27,7 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
         const response = await fetch(`${API_URL}/api/analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contextAndText, fileName, imageBase64, lang }),
+            body: JSON.stringify({ contextAndText, fileName, imageBase64, lang, country, region }),
             signal: controller.signal
         });
         clearTimeout(timeoutId);
@@ -53,7 +53,7 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
     }
 };
 
-export const generateDraft = async (summary: string, tone: string, template: string, lang: string, currentDraft?: string): Promise<{ draft: string, explanation?: string, chatResponse?: string }> => {
+export const generateDraft = async (summary: string, tone: string, template: string, lang: string, currentDraft?: string, country?: string, region?: string): Promise<{ draft: string, explanation?: string, chatResponse?: string }> => {
     console.log(`[Orchestrator] Generating draft. Template: ${template}`);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -62,7 +62,7 @@ export const generateDraft = async (summary: string, tone: string, template: str
         const response = await fetch(`${API_URL}/api/draft`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ context: summary, tone, template, lang, currentDraft }),
+            body: JSON.stringify({ context: summary, tone, template, lang, currentDraft, country, region }),
             signal: controller.signal
         });
 

@@ -11,11 +11,13 @@ export enum Screen {
 export interface AnalysisResult {
   summary: string;
   keyPoints: string[];
+  keyDates?: string[];
+  complexTerms?: { term: string; explanation: string }[];
+  regionalContext?: string;
   warning?: string;
   fileName: string;
   timestamp: string;
-  // new fields
-  category?: 'bill' | 'form' | 'scam' | 'legal' | 'other';
+  category?: 'identity' | 'employment' | 'taxation' | 'health' | 'legal' | 'housing' | 'education' | 'social' | 'finance' | 'transport' | 'other';
   suggestedActions?: {
     type: 'pay' | 'fill' | 'dispute' | 'ignore' | 'clarify';
     label: string;

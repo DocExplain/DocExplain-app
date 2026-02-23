@@ -6,26 +6,42 @@ export const config = {
     runtime: "edge",
 };
 
-const JSON_PROMPT = `You are a pedagogical and administrative assistant AI named DocuMate. Analyze the provided document.
-Output MUST be in the user's language unless specified otherwise.
-CRITICAL: You are an assistant helping users understand their documents. Do not give direct medical or legal advice (like "take this pill" or "sue this person"), but DO explain and simplify complex administrative, medical, or legal terms found in the document.
-Be careful for bills, user has to make sure it's a legitimate bill before you advise to pay the bill on time or not (check for scam or legitimacy).
+const JSON_PROMPT = `Act as a Pedagogical Administrative Assistant named DocuMate. Your goal is to analyze a document and make it understandable for any layperson, regardless of their background.
+
+Follow ISO 24495-1 Plain Language principles:
+1. Help the user FIND what they need.
+2. Help the user UNDERSTAND what they find.
+3. Help the user USE the information to take action.
+
+RULES:
+- Write in active voice and use everyday language.
+- Avoid legal jargon. If unavoidable, IMMEDIATELY explain it in parentheses.
+- Never use double negatives.
+- Be empathetic and pedagogical in tone.
+- For bills: check for signs of scam before advising payment. Warn the user if suspicious.
+- Use the user's country and region context (if provided) to give jurisdictionally accurate guidance.
+
+Output MUST be in the user's language.
+
 Return a JSON object with:
-- "summary": 2-3 sentences plain English OVERALL summary. If there are jargon terms, explain them in parentheses.
-- "keyPoints": array of 5 key points, more if the document is long (more than 2 pages, adapt)
-- "warning": potential risks or "null" if none
-- "category": one of ["bill", "form", "scam", "legal", "other"]
-- "suggestedActions": array of {type, label, description}
-  - type: one of ["contact", "fill", "dispute", "ignore", "ask for clarifications"] if relevant
-  - label: short action button text (3 words max) e.g., "Contest", "Ask for delay", "Provide details".
-  - description: why this action is recommended.
-- "pages": An array of objects, one for each page in the document. Each object MUST contain:
-  - "pageNumber": integer starting from 1
-  - "summary": a brief summary of THIS SPECIFIC PAGE
-  - "extractedText": THE FULL, EXACT TEXT CONTENT (OCR) of THIS SPECIFIC PAGE. This is MANDATORY.
-- "extractedText": THE FULL, EXACT TEXT CONTENT of the ENTIRE document (as a fallback).
-- "isLegible": boolean (true if document content is readable, false if too blurry/dark/cutoff)
-- "illegibleReason": string ("null" if legible, otherwise short explanation in user's language e.g. "Image too blurry")`;
+- "summary": 2-3 sentences, clear OVERALL summary (active voice, no jargon).
+- "keyPoints": 5 key points minimum; more for longer documents (adapt to length).
+- "keyDates": array of strings listing important deadlines or dates found in the document (e.g. "Pay before: March 31, 2025"). Empty array if none.
+- "complexTerms": array of objects {term, explanation} for any jargon found. Use everyday language for explanations. Empty array if none.
+- "regionalContext": 1-2 sentences on specific legal nuances for the user's country/region. "null" if no country provided.
+- "warning": potential risks or "null" if none.
+- "category": one of ["identity", "employment", "taxation", "health", "legal", "housing", "education", "social", "finance", "transport", "other"].
+- "suggestedActions": array of {type, label, description}.
+  - type: one of ["contact", "fill", "dispute", "ignore", "ask for clarifications"] if relevant.
+  - label: short action button text (3 words max).
+  - description: why this action is recommended, in plain language.
+- "pages": array of objects, one per page. Each MUST contain:
+  - "pageNumber": integer starting from 1.
+  - "summary": brief summary of THIS page.
+  - "extractedText": FULL, EXACT OCR text of THIS page (MANDATORY).
+- "extractedText": FULL text of the ENTIRE document (fallback).
+- "isLegible": boolean (true if readable).
+- "illegibleReason": "null" if legible, otherwise a brief explanation in the user's language.`;
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -35,10 +51,11 @@ const CORS_HEADERS = {
 };
 
 
-async function analyzeWithGemini(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, geminiKey: string) {
+async function analyzeWithGemini(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, geminiKey: string, country?: string, region?: string) {
     const ai = new GoogleGenAI({ apiKey: geminiKey });
 
-    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ALL text values in the JSON output (summary, keyPoints, warning, label, description, illegibleReason) MUST be translated to ${lang}.`;
+    const locationCtx = country ? `User Location: ${country}${region ? `, ${region}` : ''}. ` : '';
+    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ${locationCtx}ALL text values in the JSON output MUST be in ${lang}. regionalContext MUST reflect laws/rules specific to ${country || 'the user\'s country'}${region ? ` and ${region}` : ''}.`;
 
     let contents: any[] = [];
 
@@ -75,6 +92,19 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
                         keyPoints: { type: "array", items: { type: "string" } },
                         warning: { type: "string" },
                         category: { type: "string" },
+                        keyDates: { type: "array", items: { type: "string" } },
+                        complexTerms: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    term: { type: "string" },
+                                    explanation: { type: "string" }
+                                },
+                                required: ["term", "explanation"]
+                            }
+                        },
+                        regionalContext: { type: "string" },
                         suggestedActions: {
                             type: "array",
                             items: {
@@ -103,7 +133,7 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
                         illegibleReason: { type: "string" },
                         extractedText: { type: "string" }
                     },
-                    required: ["summary", "keyPoints", "category", "suggestedActions", "pages", "isLegible", "illegibleReason", "extractedText"]
+                    required: ["summary", "keyPoints", "keyDates", "complexTerms", "category", "suggestedActions", "pages", "isLegible", "illegibleReason", "extractedText"]
                 }
             }
         });
@@ -115,10 +145,11 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
     }
 }
 
-async function analyzeWithOpenAI(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, openaiKey: string) {
+async function analyzeWithOpenAI(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, openaiKey: string, country?: string, region?: string) {
     const openai = new OpenAI({ apiKey: openaiKey });
 
-    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ALL text values in the JSON output (summary, keyPoints, warning, label, description, illegibleReason) MUST be translated to ${lang}.`;
+    const locationCtx = country ? `User Location: ${country}${region ? `, ${region}` : ''}. ` : '';
+    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ${locationCtx}ALL text values in the JSON output MUST be in ${lang}. regionalContext MUST reflect laws/rules specific to ${country || 'the user\'s country'}${region ? ` and ${region}` : ''}.`;
 
     const messages: any[] = [
         { role: "system", content: localizedPrompt }
@@ -169,7 +200,7 @@ export default async function handler(req: Request) {
     }
 
     try {
-        const { contextAndText = "", fileName = "document", imageBase64, lang = "English" } = await req.json();
+        const { contextAndText = "", fileName = "document", imageBase64, lang = "English", country, region } = await req.json();
 
         if (!contextAndText && !imageBase64) {
             return new Response(JSON.stringify({ error: "No context or image provided" }), { status: 400, headers: CORS_HEADERS });
@@ -202,14 +233,13 @@ export default async function handler(req: Request) {
         // Try Primary
         try {
             if (primaryModel === "gemini" && geminiKey) {
-                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey);
+                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey, country, region);
                 finalModel = "gemini-2.0-flash";
             } else if (openaiKey) {
-                result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey);
+                result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey, country, region);
                 finalModel = "gpt-4o-mini";
             } else if (geminiKey) {
-                // Fallback if primary key missing but gemini available
-                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey);
+                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey, country, region);
                 finalModel = "gemini-2.0-flash";
             }
         } catch (e: any) {
@@ -222,10 +252,10 @@ export default async function handler(req: Request) {
             console.log(`Attempting fallback to secondary model: ${secondaryModel}`);
             try {
                 if (secondaryModel === "gemini" && geminiKey) {
-                    result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey);
+                    result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey, country, region);
                     finalModel = "gemini-2.0-flash (fallback)";
                 } else if (openaiKey) {
-                    result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey);
+                    result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey, country, region);
                     finalModel = "gpt-4o-mini (fallback)";
                 }
             } catch (e: any) {

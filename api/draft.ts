@@ -35,15 +35,19 @@ export default async function handler(req: Request) {
         let taskInstructions = "";
         if (template === 'Form Filling Data') {
             taskInstructions = `
-- Conduct a FRESH AND DEEP ANALYTICAL REVIEW of the Document Context.
-- The user wants to fill out this form but needs help understanding what to put in each field.
-- IDENTIFY every single field that needs to be filled.
-- OUTPUT FORMAT: Provide a list where each item represents a field.
-- Format each item EXACTLY as: "Nom du champ : [Explication claire sur ce qui est attendu et où trouver l'info]"
-- DO NOT just copy the form with placeholders. You must EXPLAIN what is needed for each field and where to find the information (outside classics like name, surname, birthdate, gender).
-- If the document already contains the info (e.g., your name, address, or an ID number found in the context), mention it explicitly (e.g. "Vous pouvez trouver ce numéro en haut à droite du document : 12345").
-- Use a "Guide / Tutorial" style, addressing the user directly.
-- Tone: Pedagogical, clear, helpful.`;
+Act as a Legal Educator. Help the user fill out this specific form.
+
+For EACH field that needs to be filled, use this 3-step Chain-of-Thought process:
+
+1. **IDENTIFY** – What is the legal purpose of this field?
+2. **EXPLAIN** – What exact information is required, in plain everyday language?
+3. **EXAMPLE** – Provide a concrete example of how to fill it (e.g., for "Date de naissance" → "Entrez votre date de naissance au format JJ/MM/AAAA : ex. 15/04/1990").
+
+FORMAT: Bullet points per field. Use "**Nom du champ**" as the field header.
+TONE: Advisory, professional, and empathetic. Address the user directly ("you", "your").
+CRITICAL: DO NOT prefill the form with mock data (like "Votre Nom"). EXPLAIN what is needed.
+- If the info is already visible in the document context, mention it explicitly: "You can find this at the top of page 2: ref. 12345".
+- For standard fields (name, surname, birthdate, gender), assume the user knows their info — focus your explanation on WHERE to find less obvious info.`;
         } else if (template === 'Ask for clarifications') {
             taskInstructions = `
 - Identify complex, vague, or ambiguous points in the document.

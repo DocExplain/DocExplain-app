@@ -425,10 +425,37 @@ export const SmartTemplates: React.FC<SmartTemplatesProps> = ({ result, initialA
                                 </div>
                             )}
 
-                            {/* Inline Chat Q&A — shown in analysis mode */}
+                            {/* DRAFT WORKSPACE — appears when a draft is generated from a question */}
+                            {draft && draft.length > 50 && viewMode === 'analysis' && (
+                                <div className="mt-4 animate-fade-in">
+                                    <div className="rounded-2xl border-2 border-primary/30 bg-blue-50/50 dark:bg-blue-900/10 overflow-hidden">
+                                        {/* Draft header */}
+                                        <div className="flex items-center justify-between px-4 py-2.5 bg-primary/10 dark:bg-primary/20 border-b border-primary/20">
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-rounded text-primary text-base">edit_document</span>
+                                                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">{t.generatedDraft}</h4>
+                                                {loading && <span className="text-[10px] text-primary/60 animate-pulse">— en cours…</span>}
+                                            </div>
+                                            <button
+                                                onClick={handleCopy}
+                                                className="flex items-center gap-1 px-3 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors"
+                                            >
+                                                <span className="material-symbols-rounded text-sm">content_copy</span>
+                                                {t.copy}
+                                            </button>
+                                        </div>
+                                        {/* Draft content */}
+                                        <div className="p-4 max-h-[300px] overflow-y-auto">
+                                            <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{draft}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Chat messages — shown below draft workspace */}
                             {chatLog.length > 0 && (
                                 <div className="mt-4 space-y-3">
-                                    {chatLog.map((msg, i) => (
+                                    {chatLog.filter(msg => !msg.content.startsWith('📝')).map((msg, i) => (
                                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                             <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
                                                 ? 'bg-primary text-white rounded-br-sm'

@@ -50,17 +50,17 @@ const App: React.FC = () => {
           await Purchases.configure({ apiKey: 'test_aqrwUXptWgcKqadnjavnJwKLKHB' });
         }
 
-        if (import.meta.env.DEV) {
-          await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
-        }
+        // Enable debug logs temporarily to see why offerings are missing
+        await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
 
         const result: any = await Purchases.getCustomerInfo();
         const customerInfo = result.customerInfo || result;
-        setIsPro(customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined);
+        // Adjust entitlement ID to 'premium' (verify this in RevenueCat dashboard)
+        setIsPro(customerInfo.entitlements?.active?.['premium'] !== undefined);
 
         await Purchases.addCustomerInfoUpdateListener((info: any) => {
           const customerInfo = info.customerInfo || info;
-          setIsPro(customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined);
+          setIsPro(customerInfo.entitlements?.active?.['premium'] !== undefined);
         });
 
         // ✅ SDK is ready — unlock the paywall button

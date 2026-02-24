@@ -52,7 +52,7 @@ export const Paywall: React.FC<PaywallProps> = ({ onClose, onUpgrade }) => {
         try {
             const result: any = await Purchases.restorePurchases();
             const customerInfo = result.customerInfo || result;
-            if (customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined) {
+            if (customerInfo.entitlements?.active?.['premium'] !== undefined) {
                 alert("Subscription restored!");
                 onUpgrade();
                 onClose();
@@ -91,6 +91,24 @@ export const Paywall: React.FC<PaywallProps> = ({ onClose, onUpgrade }) => {
                 <div className="px-6 space-y-4">
                     <div className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 shadow-sm">
                         <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-primary">
+                            <span className="material-symbols-rounded">all_inclusive</span>
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-1">{t.unlimitedAnalysis}</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.unlimitedAnalysisSub}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                            <span className="material-symbols-rounded">bolt</span>
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-1">{t.priorityAI}</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.priorityAISub}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
                             <span className="material-symbols-rounded">block</span>
                         </div>
                         <div>
@@ -99,21 +117,12 @@ export const Paywall: React.FC<PaywallProps> = ({ onClose, onUpgrade }) => {
                         </div>
                     </div>
                     <div className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 shadow-sm">
-                        <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                            <span className="material-symbols-rounded">description</span>
+                        <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                            <span className="material-symbols-rounded">chat</span>
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-1">{t.longerDocs}</h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.longerDocsSub}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 shadow-sm">
-                        <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-                            <span className="material-symbols-rounded">all_inclusive</span>
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-1">{t.detailedAnalysis}</h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.detailedSub}</p>
+                            <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-1">{t.smartFollowups}</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.smartFollowupsSub}</p>
                         </div>
                     </div>
                 </div>

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import { RevenueCatUI, PAYWALL_RESULT } from '@revenuecat/purchases-capacitor-ui';
+import { AdMob, InterstitialAdPluginEvents } from '@capacitor-community/admob';
 import { Navigation } from './components/Navigation';
 import { Home } from './screens/Home';
 import { Result } from './screens/Result';
@@ -13,6 +14,13 @@ import { FAQ } from './screens/FAQ';
 import { AnalysisResult, Screen } from './types';
 import { LanguageProvider } from './i18n/LanguageContext';
 
+// ── AdMob Ad Unit IDs ──────────────────────────────────────────────────────
+// ⚠️  Replace these with your real Ad Unit IDs from AdMob Console before release.
+//     Use Google test IDs for now (they show real test ads, no policy risk).
+const ADMOB_APP_ID_IOS = 'ca-app-pub-3940256099942544~1458002511';          // Test App ID
+const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-3940256099942544/4411468910';    // Test Interstitial
+// const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-XXXXXXXX/YOUR_REAL_UNIT_ID'; // ← replace for production
+
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.HOME);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -22,12 +30,16 @@ const App: React.FC = () => {
 
   // Subscription State
   const [isPro, setIsPro] = useState(false);
+  // Guard: only allow paywall when RevenueCat is fully configured
+  const [isPurchasesReady, setIsPurchasesReady] = useState(false);
+  // Track pending result while ad is showing
+  const pendingResultRef = useRef<AnalysisResult | null>(null);
 
+  // ── RevenueCat Init ─────────────────────────────────────────────────────
   useEffect(() => {
     const initPurchases = async () => {
-      // Pour tester en web/dev sans le plugin natif
       if (Capacitor.getPlatform() === 'web') {
-        console.log("RevenueCat: SDK is not supported on web. Mocking Pro state.");
+        console.log("RevenueCat: SDK not supported on web. Mocking Pro state.");
         return;
       }
 
@@ -50,21 +62,98 @@ const App: React.FC = () => {
           const customerInfo = info.customerInfo || info;
           setIsPro(customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined);
         });
+
+        // ✅ SDK is ready — unlock the paywall button
+        setIsPurchasesReady(true);
       } catch (e) {
         console.warn("RevenueCat initialization failed:", e);
+        // Still mark as ready so the fallback paywall screen can be used
+        setIsPurchasesReady(true);
       }
     };
 
     initPurchases();
   }, []);
 
-  const handleAnalysisComplete = (result: AnalysisResult) => {
+  // ── AdMob Init ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    const initAdMob = async () => {
+      if (!Capacitor.isNativePlatform()) return;
+      try {
+        await AdMob.initialize({ testingDevices: [] });
+        // Pre-load first interstitial
+        preloadInterstitial();
+      } catch (e) {
+        console.warn("AdMob init failed:", e);
+      }
+    };
+    initAdMob();
+  }, []);
+
+  const preloadInterstitial = async () => {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      const adId = Capacitor.getPlatform() === 'ios' ? ADMOB_INTERSTITIAL_IOS : ADMOB_INTERSTITIAL_IOS;
+      await AdMob.prepareInterstitial({ adId });
+    } catch (e) {
+      console.warn("AdMob preload failed:", e);
+    }
+  };
+
+  const showInterstitialAndNavigate = async (result: AnalysisResult) => {
+    if (!Capacitor.isNativePlatform() || isPro) {
+      // No ad for Pro users or web
+      navigateToResult(result);
+      return;
+    }
+
+    try {
+      // Listen for ad dismissal to then navigate
+      const listener = await AdMob.addListener(
+        InterstitialAdPluginEvents.Dismissed,
+        () => {
+          listener.remove();
+          navigateToResult(result);
+          // Pre-load next ad
+          preloadInterstitial();
+        }
+      );
+
+      // Also handle ad failure gracefully
+      const failListener = await AdMob.addListener(
+        InterstitialAdPluginEvents.FailedToLoad,
+        () => {
+          failListener.remove();
+          listener.remove();
+          navigateToResult(result);
+        }
+      );
+
+      await AdMob.showInterstitial();
+    } catch (e) {
+      console.warn("AdMob show failed, navigating directly:", e);
+      navigateToResult(result);
+    }
+  };
+
+  const navigateToResult = (result: AnalysisResult) => {
     setAnalysisResult(result);
     setHistory((prev) => [result, ...prev]);
     setCurrentScreen(Screen.RESULT);
   };
 
+  const handleAnalysisComplete = (result: AnalysisResult) => {
+    showInterstitialAndNavigate(result);
+  };
+
+  // ── Paywall ─────────────────────────────────────────────────────────────
   const handleOpenPaywall = async () => {
+    if (!isPurchasesReady) {
+      // SDK not ready yet, just show the fallback screen
+      setCurrentScreen(Screen.PAYWALL);
+      return;
+    }
+
     if (Capacitor.isNativePlatform()) {
       try {
         const result = await RevenueCatUI.presentPaywall();

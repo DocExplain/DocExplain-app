@@ -149,25 +149,36 @@ const App: React.FC = () => {
   // ── Paywall ─────────────────────────────────────────────────────────────
   const handleOpenPaywall = async () => {
     if (!isPurchasesReady) {
-      // SDK not ready yet, just show the fallback screen
       setCurrentScreen(Screen.PAYWALL);
       return;
     }
 
     if (Capacitor.isNativePlatform()) {
       try {
+        // First check if offerings/paywall are available
+        const offerings = await Purchases.getOfferings();
+        const current = (offerings as any)?.current || (offerings as any)?.offerings?.current;
+
+        if (!current || !current.availablePackages || current.availablePackages.length === 0) {
+          console.warn("No offerings available, using fallback paywall");
+          setCurrentScreen(Screen.PAYWALL);
+          return;
+        }
+
+        // Offerings exist — try native paywall
         const result = await RevenueCatUI.presentPaywall();
         if (result.result === PAYWALL_RESULT.PURCHASED || result.result === PAYWALL_RESULT.RESTORED) {
           setIsPro(true);
         }
-      } catch (e) {
-        console.error("Native paywall error", e);
+      } catch (e: any) {
+        console.error("Paywall error, using fallback:", e);
         setCurrentScreen(Screen.PAYWALL);
       }
     } else {
       setCurrentScreen(Screen.PAYWALL);
     }
   };
+
 
   const renderScreen = () => {
     switch (currentScreen) {

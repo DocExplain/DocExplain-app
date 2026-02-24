@@ -52,7 +52,7 @@ export const Paywall: React.FC<PaywallProps> = ({ onClose, onUpgrade }) => {
         try {
             const result: any = await Purchases.restorePurchases();
             const customerInfo = result.customerInfo || result;
-            if (customerInfo.entitlements?.active?.['premium'] !== undefined) {
+            if (customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined) {
                 alert("Subscription restored!");
                 onUpgrade();
                 onClose();

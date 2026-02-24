@@ -56,11 +56,11 @@ const App: React.FC = () => {
         const result: any = await Purchases.getCustomerInfo();
         const customerInfo = result.customerInfo || result;
         // Adjust entitlement ID to 'premium' (verify this in RevenueCat dashboard)
-        setIsPro(customerInfo.entitlements?.active?.['premium'] !== undefined);
+        setIsPro(customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined);
 
         await Purchases.addCustomerInfoUpdateListener((info: any) => {
           const customerInfo = info.customerInfo || info;
-          setIsPro(customerInfo.entitlements?.active?.['premium'] !== undefined);
+          setIsPro(customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined);
         });
 
         // ✅ SDK is ready — unlock the paywall button

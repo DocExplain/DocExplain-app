@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
+import { RevenueCatUI, PAYWALL_RESULT } from '@revenuecat/purchases-capacitor-ui';
 import { Navigation } from './components/Navigation';
 import { Home } from './screens/Home';
 import { Result } from './screens/Result';
@@ -20,10 +23,61 @@ const App: React.FC = () => {
   // Subscription State
   const [isPro, setIsPro] = useState(false);
 
+  useEffect(() => {
+    const initPurchases = async () => {
+      // Pour tester en web/dev sans le plugin natif
+      if (Capacitor.getPlatform() === 'web') {
+        console.log("RevenueCat: SDK is not supported on web. Mocking Pro state.");
+        return;
+      }
+
+      try {
+        if (Capacitor.getPlatform() === 'ios') {
+          await Purchases.configure({ apiKey: 'test_aqrwUXptWgcKqadnjavnJwKLKHB' });
+        } else if (Capacitor.getPlatform() === 'android') {
+          await Purchases.configure({ apiKey: 'test_aqrwUXptWgcKqadnjavnJwKLKHB' });
+        }
+
+        if (import.meta.env.DEV) {
+          await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
+        }
+
+        const result: any = await Purchases.getCustomerInfo();
+        const customerInfo = result.customerInfo || result;
+        setIsPro(customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined);
+
+        await Purchases.addCustomerInfoUpdateListener((info: any) => {
+          const customerInfo = info.customerInfo || info;
+          setIsPro(customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined);
+        });
+      } catch (e) {
+        console.warn("RevenueCat initialization failed:", e);
+      }
+    };
+
+    initPurchases();
+  }, []);
+
   const handleAnalysisComplete = (result: AnalysisResult) => {
     setAnalysisResult(result);
     setHistory((prev) => [result, ...prev]);
     setCurrentScreen(Screen.RESULT);
+  };
+
+  const handleOpenPaywall = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await RevenueCatUI.presentPaywall();
+        if (result.result === PAYWALL_RESULT.PURCHASED || result.result === PAYWALL_RESULT.RESTORED) {
+          setIsPro(true);
+        }
+      } catch (e) {
+        console.error("Native paywall error", e);
+        setCurrentScreen(Screen.PAYWALL);
+      }
+    } else {
+      setCurrentScreen(Screen.PAYWALL);
+    }
   };
 
   const renderScreen = () => {
@@ -32,7 +86,7 @@ const App: React.FC = () => {
         return (
           <Home
             onAnalysisComplete={handleAnalysisComplete}
-            onNavigate={setCurrentScreen}
+            onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)}
             setLoading={setLoading}
             isPro={isPro}
           />
@@ -47,7 +101,7 @@ const App: React.FC = () => {
               setCurrentScreen(Screen.SMART_TEMPLATES);
             }}
           />
-        ) : <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={setCurrentScreen} setLoading={setLoading} isPro={isPro} />;
+        ) : <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} isPro={isPro} />;
       case Screen.SMART_TEMPLATES:
         return analysisResult ? (
           <SmartTemplates
@@ -85,7 +139,7 @@ const App: React.FC = () => {
           />
         );
       default:
-        return <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={setCurrentScreen} setLoading={setLoading} isPro={isPro} />;
+        return <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} isPro={isPro} />;
     }
   };
 
@@ -113,7 +167,7 @@ const App: React.FC = () => {
             <div className="flex gap-2">
               {currentScreen === Screen.HOME && !isPro && (
                 <button
-                  onClick={() => setCurrentScreen(Screen.PAYWALL)}
+                  onClick={handleOpenPaywall}
                   className="flex items-center gap-1 bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm hover:opacity-90 transition-opacity"
                 >
                   <span className="material-symbols-rounded text-sm">diamond</span>

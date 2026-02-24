@@ -5,8 +5,8 @@ DERNIÈRE MISE À JOUR : Changement du Package Name pour "com.documate.app"
 et incrémentation de la Version à 2.
 
 Packge Name : com.documate.app
-Version Code : 3
-Version Name : 1.2
+Version Code : 5
+Version Name : 1.5
 
 Fichier Keystore : c:\Users\nicol\Downloads\documate\documate-release.jks
 Mot de passe Keystore : DocuMate2024!

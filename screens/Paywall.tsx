@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
+import { Purchases, PurchasesOffering, PurchasesPackage } from '@revenuecat/purchases-capacitor';
+import { Capacitor } from '@capacitor/core';
 
 interface PaywallProps {
     onClose: () => void;
@@ -8,10 +10,58 @@ interface PaywallProps {
 
 export const Paywall: React.FC<PaywallProps> = ({ onClose, onUpgrade }) => {
     const { t } = useLanguage();
-    const handlePurchase = () => {
-        alert("Purchase successful! You are now a Pro member.");
-        onUpgrade();
-        onClose();
+    const [offering, setOffering] = useState<PurchasesOffering | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchOfferings = async () => {
+            if (Capacitor.getPlatform() === 'web') {
+                setLoading(false);
+                return;
+            }
+            try {
+                const offerings = await Purchases.getOfferings();
+                if (offerings.current) {
+                    setOffering(offerings.current);
+                }
+            } catch (e) {
+                console.error("Error fetching offerings:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOfferings();
+    }, []);
+
+    const handlePurchase = async (pkg: PurchasesPackage) => {
+        try {
+            const result: any = await Purchases.purchasePackage({ aPackage: pkg });
+            const customerInfo = result.customerInfo || result;
+            if (customerInfo.entitlements?.active?.['premium'] !== undefined) {
+                onUpgrade();
+                onClose();
+            }
+        } catch (error: any) {
+            if (!error.userCancelled) {
+                alert(error.message || "Purchase failed");
+            }
+        }
+    };
+
+    const handleRestore = async () => {
+        try {
+            const result: any = await Purchases.restorePurchases();
+            const customerInfo = result.customerInfo || result;
+            if (customerInfo.entitlements?.active?.['DocExplain Premium'] !== undefined) {
+                alert("Subscription restored!");
+                onUpgrade();
+                onClose();
+            } else {
+                alert("No active subscription found.");
+            }
+        } catch (error: any) {
+            alert("Restore failed: " + error.message);
+        }
     };
 
     return (
@@ -20,7 +70,7 @@ export const Paywall: React.FC<PaywallProps> = ({ onClose, onUpgrade }) => {
                 <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-500">
                     <span className="material-symbols-rounded text-2xl">close</span>
                 </button>
-                <button className="text-sm font-semibold text-gray-500 hover:text-primary transition-colors">
+                <button onClick={handleRestore} className="text-sm font-semibold text-gray-500 hover:text-primary transition-colors">
                     {t.restorePurchases}
                 </button>
             </header>
@@ -69,30 +119,39 @@ export const Paywall: React.FC<PaywallProps> = ({ onClose, onUpgrade }) => {
                 </div>
 
                 <div className="mt-8 px-6 grid grid-cols-1 gap-4">
-                    <button onClick={handlePurchase} className="relative overflow-hidden rounded-xl border-2 border-primary bg-primary/5 dark:bg-primary/10 p-4 text-center active:scale-[0.98] transition-transform">
-                        <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg uppercase tracking-wider">{t.mostPopular}</div>
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{t.weekly}</p>
-                        <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">$2.00</span>
-                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t.perWeek}</span>
+                    {offering ? offering.availablePackages.map((pkg) => (
+                        <button
+                            key={pkg.identifier}
+                            onClick={() => handlePurchase(pkg)}
+                            className={`relative overflow-hidden rounded-xl border-2 p-4 text-center active:scale-[0.98] transition-transform ${pkg.packageType === 'ANNUAL' || pkg.packageType === 'MONTHLY'
+                                ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark'
+                                }`}
+                        >
+                            {pkg.packageType === 'ANNUAL' && (
+                                <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg uppercase tracking-wider">
+                                    {t.mostPopular}
+                                </div>
+                            )}
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                {pkg.product.title}
+                            </p>
+                            <div className="flex items-baseline justify-center gap-1">
+                                <span className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                                    {pkg.product.priceString}
+                                </span>
+                                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                    {pkg.packageType === 'ANNUAL' ? t.perYear : pkg.packageType === 'MONTHLY' ? t.perMonth : t.perWeek}
+                                </span>
+                            </div>
+                        </button>
+                    )) : (
+                        <div className="text-center py-4">
+                            <p className="text-sm text-gray-500">
+                                {loading ? "Loading offers..." : "No offers available. Check Store configuration."}
+                            </p>
                         </div>
-                    </button>
-
-                    <button onClick={handlePurchase} className="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark p-4 text-center active:scale-[0.98] transition-transform">
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{t.monthly}</p>
-                        <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">$9.00</span>
-                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t.perMonth}</span>
-                        </div>
-                    </button>
-
-                    <button onClick={handlePurchase} className="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark p-4 text-center active:scale-[0.98] transition-transform">
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{t.yearly}</p>
-                        <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">$100.00</span>
-                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t.perYear}</span>
-                        </div>
-                    </button>
+                    )}
                 </div>
 
                 <div className="mt-6 px-8 text-center">
@@ -107,7 +166,11 @@ export const Paywall: React.FC<PaywallProps> = ({ onClose, onUpgrade }) => {
             </div>
 
             <div className="p-4 bg-white dark:bg-surface-dark border-t border-gray-100 dark:border-gray-700">
-                <button onClick={handlePurchase} className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold text-lg h-14 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]">
+                <button
+                    onClick={() => offering?.current ? handlePurchase(offering.current) : null}
+                    disabled={!offering}
+                    className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 disabled:bg-gray-400 text-white font-bold text-lg h-14 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]"
+                >
                     {t.startTrial}
                 </button>
                 <p className="text-center text-xs text-gray-400 mt-2">{t.cancelAnytime}</p>

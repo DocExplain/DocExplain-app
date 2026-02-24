@@ -33,7 +33,7 @@ const App: React.FC = () => {
 
       try {
         if (Capacitor.getPlatform() === 'ios') {
-          await Purchases.configure({ apiKey: 'test_aqrwUXptWgcKqadnjavnJwKLKHB' });
+          await Purchases.configure({ apiKey: 'appl_cubDksaszunSkjAHHVhrFejxttW' });
         } else if (Capacitor.getPlatform() === 'android') {
           await Purchases.configure({ apiKey: 'test_aqrwUXptWgcKqadnjavnJwKLKHB' });
         }

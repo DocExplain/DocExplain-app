@@ -45,6 +45,7 @@ workflows:
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD" ios/App/App/Info.plist
       - name: Manual Certificate and Profile Installation
         script: |
+          set -e
           echo "🔐 Setting up Keychain and Profiles..."
 
           # Initialize Keychain
@@ -70,6 +71,7 @@ workflows:
           ls -la "$PROFILES_DIR/"
       - name: Explicitly extract signing info and Archive
         script: |
+          set -e
           echo "🔍 Locating Provisioning Profile for $BUNDLE_ID..."
           
           # Find the profile file matching the Bundle ID
@@ -102,7 +104,7 @@ workflows:
             exit 1
           fi
 
-          echo "📦 Archiving with Explicit Signing..."
+          mkdir -p $(dirname "$ARCHIVE_PATH")
           
           xcodebuild archive \
             -project "$XCODE_PROJECT" \
@@ -116,12 +118,13 @@ workflows:
             DEVELOPMENT_TEAM="$TEAM_ID" \
             COMPILER_INDEX_STORE_ENABLE=NO
 
-          # Save extracted info for the next step (Export)
-          echo "TEAM_ID=\"$TEAM_ID\"" >> /tmp/signing_info
+          # Only if archive succeeds, save info for next step
+          echo "TEAM_ID=\"$TEAM_ID\"" > /tmp/signing_info
           echo "PROFILE_NAME=\"$PROFILE_NAME\"" >> /tmp/signing_info
           
       - name: Generate ExportOptions and export IPA
         script: |
+          set -e
           # Load the info we extracted in the previous step
           source /tmp/signing_info
           
@@ -152,6 +155,11 @@ workflows:
           </plist>
           PLIST
           
+          if [ ! -d "$ARCHIVE_PATH" ]; then
+            echo "❌ Archive not found at $ARCHIVE_PATH. ARCHIVE STEP FAILED!"
+            exit 1
+          fi
+
           xcodebuild -exportArchive \
             -archivePath "$ARCHIVE_PATH" \
             -exportOptionsPlist exportOptions.plist \

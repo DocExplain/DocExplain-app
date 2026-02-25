@@ -189,9 +189,58 @@ workflows:
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID      # The Issuer ID
         submit_to_testflight: true
 
-      email:
-        recipients:
-          - user_email@example.com
-        notify:
-          success: true
-          failure: true
+  android-workflow:
+    name: Android Production Build
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      node: 22
+      java: 17
+      groups:
+        - android_credentials   # Must contain: CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
+      vars:
+        VITE_API_URL: "https://doc-explain-app.vercel.app"
+        PACKAGE_NAME: "com.documate.app"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+      - name: Build web app
+        script: |
+          echo "VITE_API_URL=$VITE_API_URL" > .env.local
+          npm run build
+      - name: Sync Capacitor
+        script: |
+          npx cap sync android
+      - name: Set Android build version
+        script: |
+          # Bump versionCode using CM build number
+          NEW_VERSION_CODE=$(($BUILD_NUMBER + 100))
+          echo "Setting versionCode to $NEW_VERSION_CODE"
+          sed -i "s/versionCode [0-9]*/versionCode $NEW_VERSION_CODE/" android/app/build.gradle
+      - name: Build Android AAB (signed)
+        script: |
+          set -e
+          # Decode keystore from base64 env variable
+          echo "$CM_KEYSTORE" | base64 --decode > /tmp/keystore.jks
+
+          cd android
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=/tmp/keystore.jks \
+            -Pandroid.injected.signing.store.password="$CM_KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$CM_KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$CM_KEY_PASSWORD"
+    artifacts:
+      - android/app/build/outputs/bundle/release/*.aab
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true

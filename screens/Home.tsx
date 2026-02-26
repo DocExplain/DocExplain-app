@@ -44,6 +44,10 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   const [adType, setAdType] = useState<'interstitial' | 'reward'>('interstitial');
   const [pendingResult, setPendingResult] = useState<any>(null); // Store result while ad plays
 
+  // AI Consent State
+  const [hasConsented, setHasConsented] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,6 +64,12 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       localStorage.setItem('documate_usage_date', today);
     } else {
       setDailyUsage(parseInt(storedUsage || '0', 10));
+    }
+
+    // AI Consent Check
+    const storedConsent = localStorage.getItem('documate_ai_consent');
+    if (storedConsent === 'true') {
+      setHasConsented(true);
     }
   }, []);
 
@@ -189,6 +199,11 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   const handleAnalyze = async () => {
     if (!selectedFile && !context && !cameraBase64) return;
     if (!isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota)) return;
+
+    if (!hasConsented && localStorage.getItem('documate_ai_consent') !== 'true') {
+      setShowConsentModal(true);
+      return;
+    }
 
     setLoading(true);
     setIsAnalyzing(true);
@@ -341,6 +356,46 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         onReward={handleAdReward}
         onUpgrade={() => { setShowAd(false); onNavigate(Screen.PAYWALL); }}
       />
+
+      {/* AI Consent Modal */}
+      {showConsentModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-surface-dark w-full max-w-sm rounded-3xl p-6 shadow-2xl relative border border-gray-100 dark:border-gray-800">
+            <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-primary mb-4 mx-auto">
+              <span className="material-symbols-rounded text-3xl">privacy_tip</span>
+            </div>
+
+            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">
+              {t.aiConsentTitle}
+            </h3>
+
+            <p className="text-sm text-gray-600 dark:text-gray-300 text-center mb-6 leading-relaxed">
+              {t.aiConsentText}
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setHasConsented(true);
+                  localStorage.setItem('documate_ai_consent', 'true');
+                  setShowConsentModal(false);
+                  setTimeout(handleAnalyze, 50); // Small delay to let modal close
+                }}
+                className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold active:scale-95 transition-all outline-none"
+              >
+                {t.aiConsentAgree}
+              </button>
+
+              <button
+                onClick={() => setShowConsentModal(false)}
+                className="w-full py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-semibold active:scale-95 transition-all outline-none"
+              >
+                {t.aiConsentDecline}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 mb-6">
         {/* Language Selector */}

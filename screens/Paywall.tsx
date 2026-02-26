@@ -168,8 +168,18 @@ export const Paywall: React.FC<PaywallProps> = ({ onClose, onUpgrade }) => {
                         {t.subRenew}
                     </p>
                     <div className="flex justify-center gap-4">
-                        <button className="text-[10px] text-gray-500 underline">{t.terms}</button>
-                        <button className="text-[10px] text-gray-500 underline">{t.privacy}</button>
+                        <button
+                            onClick={() => window.open('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/', '_system')}
+                            className="text-[10px] text-gray-500 underline"
+                        >
+                            {t.terms}
+                        </button>
+                        <button
+                            onClick={() => window.open('https://documate.work/privacy', '_system')}
+                            className="text-[10px] text-gray-500 underline"
+                        >
+                            {t.privacy}
+                        </button>
                     </div>
                 </div>
             </div>

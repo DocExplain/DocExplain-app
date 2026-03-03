@@ -1,6 +1,7 @@
 import React from 'react';
 import { AnalysisResult, Screen } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
+import { Share } from '@capacitor/share';
 
 interface ResultProps {
   result: AnalysisResult;
@@ -10,6 +11,19 @@ interface ResultProps {
 
 export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
   const { t } = useLanguage();
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        title: 'DocuMate Analysis',
+        text: `${result.fileName}\n\n${t.summary}:\n${result.summary}\n\n${t.keyPoints}:\n- ${result.keyPoints.join('\n- ')}`,
+        dialogTitle: 'Share Document Analysis',
+      });
+    } catch (err) {
+      console.error("Error sharing:", err);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col p-4 pb-24 animate-slide-up">
       <div className="flex items-center bg-white dark:bg-surface-dark rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
@@ -72,6 +86,13 @@ export const Result: React.FC<ResultProps> = ({ result, onBack, onDraft }) => {
 
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 p-4 z-40" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         <div className="max-w-md mx-auto flex gap-3">
+          <button
+            onClick={handleShare}
+            className="flex-none bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium px-5 rounded-xl shadow-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center"
+            title="Share"
+          >
+            <span className="material-symbols-rounded">share</span>
+          </button>
           <button
             onClick={() => onDraft({ type: 'chat' })}
             className="flex-1 bg-primary text-white font-medium py-3 rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"

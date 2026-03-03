@@ -17,8 +17,8 @@ const getOpenAIClient = () => {
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://doc-explain-app.vercel.app';
 
-export const explainDocument = async (contextAndText: string, fileName: string, lang: string, imageBase64?: string, country?: string, region?: string): Promise<AnalysisResult> => {
-    console.log(`[Orchestrator] Starting analysis. Context len: ${contextAndText.length}, Image present: ${!!imageBase64}, Country: ${country || 'N/A'}, Region: ${region || 'N/A'}`);
+export const explainDocument = async (contextAndText: string, fileName: string, lang: string, imagesBase64?: string[], country?: string, region?: string): Promise<AnalysisResult> => {
+    console.log(`[Orchestrator] Starting analysis. Context len: ${contextAndText.length}, Images count: ${imagesBase64?.length}, Country: ${country || 'N/A'}, Region: ${region || 'N/A'}`);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
@@ -27,7 +27,7 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
         const response = await fetch(`${API_URL}/api/analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contextAndText, fileName, imageBase64, lang, country, region }),
+            body: JSON.stringify({ contextAndText, fileName, imagesBase64, lang, country, region }),
             signal: controller.signal
         });
         clearTimeout(timeoutId);

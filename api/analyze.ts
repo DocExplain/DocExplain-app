@@ -61,7 +61,7 @@ const CORS_HEADERS = {
 };
 
 
-async function analyzeWithGemini(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, geminiKey: string, country?: string, region?: string) {
+async function analyzeWithGemini(contextAndText: string, fileName: string, images: string[], lang: string, geminiKey: string, country?: string, region?: string) {
     const ai = new GoogleGenAI({ apiKey: geminiKey });
 
     const locationCtx = country ? `User Location: ${country}${region ? `, ${region}` : ''}. ` : '';
@@ -69,18 +69,21 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
 
     let contents: any[] = [];
 
-    if (imageBase64) {
-        let mimeType = 'image/jpeg';
-        if (imageBase64.startsWith('/9j/')) mimeType = 'image/jpeg';
-        else if (imageBase64.startsWith('iVBOR')) mimeType = 'image/png';
-        else if (imageBase64.startsWith('JVBER')) mimeType = 'application/pdf';
+    if (images.length > 0) {
+        let parts: any[] = [{ text: `${localizedPrompt}\n\nAdditional context: ${contextAndText || 'Analyze this document.'}` }];
+
+        for (const imgBase64 of images) {
+            let mimeType = 'image/jpeg';
+            if (imgBase64.startsWith('/9j/')) mimeType = 'image/jpeg';
+            else if (imgBase64.startsWith('iVBOR')) mimeType = 'image/png';
+            else if (imgBase64.startsWith('JVBER')) mimeType = 'application/pdf';
+
+            parts.push({ inlineData: { mimeType, data: imgBase64 } });
+        }
 
         contents = [{
             role: 'user',
-            parts: [
-                { text: `${localizedPrompt}\n\nAdditional context: ${contextAndText || 'Analyze this document.'}` },
-                { inlineData: { mimeType, data: imageBase64 } }
-            ]
+            parts
         }];
     } else {
         contents = [{
@@ -157,7 +160,7 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
     }
 }
 
-async function analyzeWithOpenAI(contextAndText: string, fileName: string, imageBase64: string | undefined, lang: string, openaiKey: string, country?: string, region?: string) {
+async function analyzeWithOpenAI(contextAndText: string, fileName: string, images: string[], lang: string, openaiKey: string, country?: string, region?: string) {
     const openai = new OpenAI({ apiKey: openaiKey });
 
     const locationCtx = country ? `User Location: ${country}${region ? `, ${region}` : ''}. ` : '';
@@ -167,22 +170,25 @@ async function analyzeWithOpenAI(contextAndText: string, fileName: string, image
         { role: "system", content: localizedPrompt }
     ];
 
-    if (imageBase64) {
-        let mimeType = 'image/jpeg';
-        if (imageBase64.startsWith('/9j/')) mimeType = 'image/jpeg';
-        else if (imageBase64.startsWith('iVBOR')) mimeType = 'image/png';
+    if (images.length > 0) {
+        let content: any[] = [{ type: "text", text: `Additional context: ${contextAndText || 'Analyze this document.'}` }];
+
+        for (const imgBase64 of images) {
+            let mimeType = 'image/jpeg';
+            if (imgBase64.startsWith('/9j/')) mimeType = 'image/jpeg';
+            else if (imgBase64.startsWith('iVBOR')) mimeType = 'image/png';
+
+            content.push({
+                type: "image_url",
+                image_url: {
+                    url: `data:${mimeType};base64,${imgBase64}`
+                }
+            });
+        }
 
         messages.push({
             role: "user",
-            content: [
-                { type: "text", text: `Additional context: ${contextAndText || 'Analyze this document.'}` },
-                {
-                    type: "image_url",
-                    image_url: {
-                        url: `data:${mimeType};base64,${imageBase64}`
-                    }
-                }
-            ]
+            content
         });
     } else {
         messages.push({
@@ -212,9 +218,11 @@ export default async function handler(req: Request) {
     }
 
     try {
-        const { contextAndText = "", fileName = "document", imageBase64, lang = "English", country, region } = await req.json();
+        const { contextAndText = "", fileName = "document", imageBase64, imagesBase64, lang = "English", country, region } = await req.json();
 
-        if (!contextAndText && !imageBase64) {
+        const images = imagesBase64 || (imageBase64 ? [imageBase64] : []);
+
+        if (!contextAndText && images.length === 0) {
             return new Response(JSON.stringify({ error: "No context or image provided" }), { status: 400, headers: CORS_HEADERS });
         }
 
@@ -231,7 +239,7 @@ export default async function handler(req: Request) {
         // Gemini is preferred for images (vision quality) and long texts (context window)
         // OpenAI is preferred for shorter, quick text analysis
         const isLongText = contextAndText.length > 15000;
-        const isImage = !!imageBase64;
+        const isImage = images.length > 0;
 
         const primaryModel = (isImage || isLongText) ? "gemini" : "openai";
         const secondaryModel = primaryModel === "gemini" ? "openai" : "gemini";
@@ -245,13 +253,13 @@ export default async function handler(req: Request) {
         // Try Primary
         try {
             if (primaryModel === "gemini" && geminiKey) {
-                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey, country, region);
+                result = await analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region);
                 finalModel = "gemini-2.0-flash";
             } else if (openaiKey) {
-                result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey, country, region);
+                result = await analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region);
                 finalModel = "gpt-4o-mini";
             } else if (geminiKey) {
-                result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey, country, region);
+                result = await analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region);
                 finalModel = "gemini-2.0-flash";
             }
         } catch (e: any) {
@@ -264,10 +272,10 @@ export default async function handler(req: Request) {
             console.log(`Attempting fallback to secondary model: ${secondaryModel}`);
             try {
                 if (secondaryModel === "gemini" && geminiKey) {
-                    result = await analyzeWithGemini(contextAndText, fileName, imageBase64, lang, geminiKey, country, region);
+                    result = await analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region);
                     finalModel = "gemini-2.0-flash (fallback)";
                 } else if (openaiKey) {
-                    result = await analyzeWithOpenAI(contextAndText, fileName, imageBase64, lang, openaiKey, country, region);
+                    result = await analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region);
                     finalModel = "gpt-4o-mini (fallback)";
                 }
             } catch (e: any) {

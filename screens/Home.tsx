@@ -30,7 +30,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   const [jurisdiction, setJurisdiction] = useState('');
   const [context, setContext] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [cameraBase64, setCameraBase64] = useState<string | null>(null);
+  const [cameraPages, setCameraPages] = useState<string[]>([]);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [fileType, setFileType] = useState<'image' | 'pdf'>('image');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -154,7 +154,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         console.error("File read failed", e);
       }
 
-      setCameraBase64(null); // Clear camera if file selected
+      setCameraPages([]); // Clear camera if file selected
     }
   };
 
@@ -169,7 +169,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
       });
 
       if (image.base64String) {
-        setCameraBase64(image.base64String);
+        setCameraPages(prev => [...prev, image.base64String as string]);
         setSelectedFile(null);
         setFilePreview(null);
       }
@@ -197,7 +197,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   };
 
   const handleAnalyze = async () => {
-    if (!selectedFile && !context && !cameraBase64) return;
+    if (!selectedFile && !context && cameraPages.length === 0) return;
     if (!isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota)) return;
 
     if (!hasConsented && localStorage.getItem('documate_ai_consent') !== 'true') {
@@ -210,14 +210,14 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
 
     let textToAnalyze = "";
     let docName = "Context Analysis";
-    let imageBase64Data: string | undefined = cameraBase64 || undefined;
+    let imagesBase64Data: string[] | undefined = cameraPages.length > 0 ? cameraPages : undefined;
 
-    // Path 1: Camera/Image (cameraBase64 is now set for both scans and image uploads)
-    if (cameraBase64) {
-      docName = selectedFile ? selectedFile.name : `scan_${new Date().getTime()}.jpg`;
+    // Path 1: Camera
+    if (cameraPages.length > 0) {
+      docName = `scan_${new Date().getTime()}.jpg`;
       textToAnalyze = context || "Analyze this document.";
     }
-    // Path 2: PDF/Text Upload
+    // Path 2: PDF/Image/Text Upload
     else if (selectedFile) {
       docName = selectedFile.name;
       try {
@@ -227,8 +227,11 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
             reader.onload = (e) => resolve((e.target?.result as string).split(',')[1]);
             reader.readAsDataURL(selectedFile);
           });
-          imageBase64Data = base64;
+          imagesBase64Data = [base64];
           textToAnalyze = context || "Analyze this PDF.";
+        } else if (selectedFile.type.includes('image')) {
+          imagesBase64Data = filePreview ? [filePreview] : undefined;
+          textToAnalyze = context || "Analyze this image.";
         } else {
           textToAnalyze = await selectedFile.text();
           if (context) textToAnalyze = `Context: ${context}\n\nDocument Content:\n${textToAnalyze}`;
@@ -255,18 +258,18 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         Jurisdiction: ${country === 'Other' ? (jurisdiction || 'Custom') : country} ${country !== 'Other' && jurisdiction ? `(${jurisdiction})` : ''}
       `;
 
-      const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imageBase64Data, country !== 'Other' ? country : undefined, jurisdiction || undefined);
+      const result = await explainDocument(fullContext, docName, SUPPORTED_LANGS.find(l => l.code === lang)?.name || 'English', imagesBase64Data, country !== 'Other' ? country : undefined, jurisdiction || undefined);
 
       if (!isPro && !showAd) {
         incrementUsage();
       }
 
       // Restore originalDoc attachment for preview
-      if (imageBase64Data) {
+      if (imagesBase64Data && imagesBase64Data.length > 0) {
         result.originalDoc = {
           type: 'image', // simplified, logic passes base64
-          data: imageBase64Data,
-          mimeType: imageBase64Data.startsWith('JVBER') ? 'application/pdf' : 'image/jpeg'
+          data: imagesBase64Data[0], // Keep passing just first page to preview for legacy compatibility
+          mimeType: imagesBase64Data[0].startsWith('JVBER') ? 'application/pdf' : 'image/jpeg'
         };
       } else if (selectedFile && !selectedFile.type.includes('image') && !selectedFile.type.includes('pdf')) {
         const textContent = await selectedFile.text();
@@ -326,25 +329,51 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   }, []);
 
   const isLimitReached = !isPro && dailyUsage >= (MAX_DAILY_FREE_DOCS + bonusQuota);
-  const hasInput = selectedFile || context || cameraBase64;
+  const hasInput = selectedFile || context || cameraPages.length > 0;
 
   return (
     <div className="flex-1 flex flex-col px-6 pb-32 animate-fade-in relative">
       {/* Document Preview Modal */}
-      {showPreview && cameraBase64 && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 animate-fade-in">
-          <div className="w-full max-w-lg bg-black rounded-2xl overflow-hidden relative shadow-2xl">
+      {showPreview && (cameraPages.length > 0 || filePreview) && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 animate-fade-in" onClick={() => setShowPreview(false)}>
+          <div className="w-full max-w-lg bg-black rounded-2xl overflow-hidden relative shadow-2xl" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowPreview(false)}
-              className="absolute top-4 right-4 z-10 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 backdrop-blur-md"
+              className="absolute top-4 right-4 z-20 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 backdrop-blur-md"
             >
               <span className="material-symbols-rounded">close</span>
             </button>
-            <img
-              src={cameraBase64 ? `data:image/jpeg;base64,${cameraBase64}` : `data:${fileType === 'pdf' ? 'application/pdf' : 'image/jpeg'};base64,${filePreview}`}
-              alt="Preview"
-              className="w-full h-auto max-h-[80vh] object-contain"
-            />
+            <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbars">
+              {cameraPages.length > 0 ? (
+                cameraPages.map((page, idx) => (
+                  <div key={idx} className="w-full shrink-0 snap-center relative">
+                    <img
+                      src={`data:image/jpeg;base64,${page}`}
+                      alt={`Preview Page ${idx + 1}`}
+                      className="w-full h-auto max-h-[80vh] object-contain"
+                    />
+                    {cameraPages.length > 1 && (
+                      <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full backdrop-blur-md text-xs font-bold">
+                        {idx + 1} / {cameraPages.length}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <img
+                  src={`data:${fileType === 'pdf' ? 'application/pdf' : 'image/jpeg'};base64,${filePreview}`}
+                  alt="Preview"
+                  className="w-full h-auto max-h-[80vh] object-contain snap-center"
+                />
+              )}
+            </div>
+            {cameraPages.length > 1 && (
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
+                {cameraPages.map((_, idx) => (
+                  <div key={idx} className="w-2 h-2 rounded-full bg-white/50"></div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -463,7 +492,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         </div>
       </div>
 
-      {!selectedFile && !cameraBase64 ? (
+      {!selectedFile && cameraPages.length === 0 ? (
         <div className="grid grid-cols-2 gap-4 mb-6">
           <button
             onClick={handleScan}
@@ -493,16 +522,16 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         </div>
       ) : (
         <div className="mb-6 bg-white dark:bg-surface-dark rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between animate-fade-in">
-          <div className="flex items-center gap-3 overflow-hidden" onClick={() => (cameraBase64 || filePreview) && setShowPreview(true)}>
-            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary shrink-0">
-              <span className="material-symbols-rounded">{(cameraBase64 || filePreview) ? (fileType === 'pdf' && !cameraBase64 ? 'picture_as_pdf' : 'photo_camera') : 'description'}</span>
+          <div className="flex items-center gap-3 overflow-hidden" onClick={() => (cameraPages.length > 0 || filePreview) && setShowPreview(true)}>
+            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary shrink-0 pointer-events-none">
+              <span className="material-symbols-rounded">{(cameraPages.length > 0 || filePreview) ? (fileType === 'pdf' && cameraPages.length === 0 ? 'picture_as_pdf' : 'photo_camera') : 'description'}</span>
             </div>
             <div className="min-w-0">
               <p className="font-medium text-gray-900 dark:text-white truncate text-sm">
-                {cameraBase64 ? 'Scanned Document' : selectedFile?.name}
+                {cameraPages.length > 0 ? `Scanned Document (${cameraPages.length} ${cameraPages.length > 1 ? 'pages' : 'page'})` : selectedFile?.name}
               </p>
               <p className="text-xs text-gray-500 flex items-center gap-1">
-                {(cameraBase64 || filePreview) ?
+                {(cameraPages.length > 0 || filePreview) ?
                   <>
                     <span className="material-symbols-rounded text-[10px]">visibility</span>
                     Tap to preview
@@ -512,12 +541,19 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
               </p>
             </div>
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setCameraBase64(null); setFilePreview(null); }}
-            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-          >
-            <span className="material-symbols-rounded">close</span>
-          </button>
+          <div className="flex items-center gap-1">
+            {cameraPages.length > 0 && (
+              <button onClick={handleScan} className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors flex items-center justify-center shrink-0" title="Add Page">
+                <span className="material-symbols-rounded">add_a_photo</span>
+              </button>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setCameraPages([]); setFilePreview(null); }}
+              className="p-2 text-gray-400 hover:text-red-500 transition-colors flex items-center justify-center shrink-0"
+            >
+              <span className="material-symbols-rounded">close</span>
+            </button>
+          </div>
         </div>
       )}
 

@@ -430,16 +430,23 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         {/* Language Selector */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-rounded text-gray-400 text-sm">translate</span>
-            <select
-              value={lang}
-              onChange={(e) => setLang(e.target.value as any)}
-              className="bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 rounded-lg px-2 py-1.5 border-0 focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            >
-              {SUPPORTED_LANGS.map(l => (
-                <option key={l.code} value={l.code}>{l.name}</option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-600 dark:to-indigo-600 border-2 border-blue-400/50 dark:border-blue-500/50 rounded-2xl px-4 py-2.5 shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] group active:scale-95 cursor-pointer animate-[pulse_2s_ease-in-out_1]">
+              <span className="material-symbols-rounded text-white text-base group-hover:rotate-12 transition-transform">translate</span>
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-white/70 leading-none mb-0.5">{t.language || 'Language'}</span>
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value as any)}
+                  className="bg-transparent text-sm font-black text-white border-0 p-0 pr-6 focus:ring-0 cursor-pointer appearance-none leading-none h-4"
+                  style={{ backgroundImage: 'none' }}
+                >
+                  {SUPPORTED_LANGS.map(l => (
+                    <option key={l.code} value={l.code} className="bg-white dark:bg-surface-dark text-gray-900 dark:text-white font-medium">{l.name}</option>
+                  ))}
+                </select>
+              </div>
+              <span className="material-symbols-rounded text-white text-sm opacity-70 group-hover:translate-y-0.5 transition-transform">expand_more</span>
+            </div>
           </div>
           <button onClick={() => setShowDebug(!showDebug)} className="text-gray-300 p-1">
             <span className="material-symbols-rounded text-xs">bug_report</span>

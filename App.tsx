@@ -3,6 +3,8 @@ import { Capacitor } from '@capacitor/core';
 import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import { RevenueCatUI, PAYWALL_RESULT } from '@revenuecat/purchases-capacitor-ui';
 import { AdMob, InterstitialAdPluginEvents } from '@capacitor-community/admob';
+import { useLanguage } from './i18n/LanguageContext';
+import { translations } from './i18n/translations';
 import { Navigation } from './components/Navigation';
 import { Home } from './screens/Home';
 import { Result } from './screens/Result';
@@ -25,6 +27,8 @@ const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.HOME);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [history, setHistory] = useState<AnalysisResult[]>([]);
+
+  const { setLang } = useLanguage();
   const [selectedAction, setSelectedAction] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 

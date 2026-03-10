@@ -461,7 +461,7 @@ const zh: TranslationStrings = {
     lexicon: "术语表", analyzingDocument: "正在分析您的文档…",
     privateSecure: "私密且安全：我们不会存储您的数据。",
     noActionNeeded: "无需操作",
-    aiConsentTitle: "数据隐私同意", aiConsentText: "为了提供解释，您的文档内容和问题将安全地发送给第三方人工智能提供商 (OpenAI)。数据不用于训练，并在分析后立即丢弃。", aiConsentAgree: "我同意", aiConsentDecline: "取消",
+    aiConsentTitle: "数据隐私同意", aiConsentText: "为了提供解释，您的文档内容和问题将安全地发送给第三方人工智能提供商。数据不用于训练，并在分析后立即丢弃。", aiConsentAgree: "我同意", aiConsentDecline: "取消",
 };
 
 const hi: TranslationStrings = {

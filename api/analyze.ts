@@ -208,6 +208,59 @@ async function analyzeWithOpenAI(contextAndText: string, fileName: string, image
     return JSON.parse(content);
 }
 
+async function analyzeWithDeepSeek(contextAndText: string, fileName: string, images: string[], lang: string, deepseekKey: string, country?: string, region?: string) {
+    const deepseek = new OpenAI({
+        apiKey: deepseekKey,
+        baseURL: "https://api.deepseek.com"
+    });
+
+    const locationCtx = country ? `User Location: ${country}${region ? `, ${region}` : ''}. ` : '';
+    const localizedPrompt = `${JSON_PROMPT}\n\nIMPORTANT: The user's language is ${lang}. ${locationCtx}ALL text values in the JSON output MUST be in ${lang}. regionalContext MUST reflect laws/rules specific to ${country || 'the user\'s country'}${region ? ` and ${region}` : ''}.`;
+
+    const messages: any[] = [
+        { role: "system", content: localizedPrompt }
+    ];
+
+    if (images.length > 0) {
+        // DeepSeek currently has limited vision support in some regions/versions, 
+        // but it is OpenAI-compatible. We'll use the chat completion format.
+        let content: any[] = [{ type: "text", text: `Additional context: ${contextAndText || 'Analyze this document.'}` }];
+
+        for (const imgBase64 of images) {
+            let mimeType = 'image/jpeg';
+            if (imgBase64.startsWith('/9j/')) mimeType = 'image/jpeg';
+            else if (imgBase64.startsWith('iVBOR')) mimeType = 'image/png';
+
+            content.push({
+                type: "image_url",
+                image_url: {
+                    url: `data:${mimeType};base64,${imgBase64}`
+                }
+            });
+        }
+
+        messages.push({
+            role: "user",
+            content
+        });
+    } else {
+        messages.push({
+            role: "user",
+            content: `Document Content:\n${contextAndText.substring(0, 15000)}`
+        });
+    }
+
+    const completion = await deepseek.chat.completions.create({
+        model: "deepseek-chat",
+        messages,
+        response_format: { type: "json_object" }
+    });
+
+    const content = completion.choices[0].message.content;
+    if (!content) throw new Error("No content from DeepSeek");
+    return JSON.parse(content);
+}
+
 export default async function handler(req: Request) {
     if (req.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -228,11 +281,32 @@ export default async function handler(req: Request) {
 
         const openaiKey = process.env.OPENAI_API_KEY;
         const geminiKey = process.env.GEMINI_API_KEY;
+        const deepseekKey = process.env.DEEPSEEK_API_KEY;
 
-        console.log(`Keys available: OpenAI: ${!!openaiKey}, Gemini: ${!!geminiKey}, Lang: ${lang}`);
+        console.log(`Keys available: OpenAI: ${!!openaiKey}, Gemini: ${!!geminiKey}, DeepSeek: ${!!deepseekKey}, Lang: ${lang}`);
 
-        if (!openaiKey && !geminiKey) {
+        if (!openaiKey && !geminiKey && !deepseekKey) {
             throw new Error("No API keys configured on server.");
+        }
+
+        // --- China Routing Logic ---
+        const isChina = country === 'China' || country === 'CN';
+        if (isChina && deepseekKey) {
+            console.log("Routing to DeepSeek for China storefront compliance.");
+            const result = await analyzeWithDeepSeek(contextAndText, fileName, images, lang, deepseekKey, country, region);
+            return new Response(JSON.stringify({
+                ...result,
+                fileName,
+                fullText: result.extractedText || contextAndText,
+                timestamp: new Date().toISOString(),
+                modelUsed: "deepseek-chat"
+            }), {
+                headers: {
+                    ...CORS_HEADERS,
+                    'Content-Type': 'application/json',
+                    'X-Model-Used': "deepseek-chat"
+                }
+            });
         }
 
         // --- Smart Selection Logic ---

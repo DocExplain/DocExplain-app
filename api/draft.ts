@@ -25,12 +25,13 @@ export default async function handler(req: Request) {
     }
 
     try {
-        const { context, tone, template, lang = "English", currentDraft = "" } = await req.json();
+        const { context, tone, template, lang = "English", currentDraft = "", country, region } = await req.json();
 
         const openaiKey = process.env.OPENAI_API_KEY;
         const geminiKey = process.env.GEMINI_API_KEY;
+        const deepseekKey = process.env.DEEPSEEK_API_KEY;
 
-        if (!openaiKey && !geminiKey) throw new Error("No API keys configured");
+        if (!openaiKey && !geminiKey && !deepseekKey) throw new Error("No API keys configured");
 
         let taskInstructions = "";
         if (template === 'Form Filling Data') {
@@ -187,7 +188,44 @@ Return a JSON object with:
             return completion.choices[0].message.content;
         };
 
+        const callDeepSeek = async (ctx: string) => {
+            const deepseek = new OpenAI({
+                apiKey: deepseekKey!,
+                baseURL: "https://api.deepseek.com"
+            });
+            const prompt = `Context: "${ctx.substring(0, 30000)}"`;
+            const completion = await deepseek.chat.completions.create({
+                model: "deepseek-chat",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: prompt }
+                ],
+                response_format: { type: "json_object" }
+            });
+            return completion.choices[0].message.content;
+        };
+
         let finalModel = "none";
+
+        // --- China Routing Logic ---
+        const isChina = country === 'China' || country === 'CN';
+        if (isChina && deepseekKey) {
+            console.log("Routing draft request to DeepSeek for China storefront compliance.");
+            result = await callDeepSeek(context);
+            finalModel = "deepseek-chat";
+            
+            if (result) {
+                const parsedResult = JSON.parse(result);
+                parsedResult.modelUsed = finalModel;
+                return new Response(JSON.stringify(parsedResult), {
+                    headers: {
+                        ...CORS_HEADERS,
+                        'Content-Type': 'application/json',
+                        'X-Model-Used': finalModel
+                    }
+                });
+            }
+        }
 
         // Execution
         try {

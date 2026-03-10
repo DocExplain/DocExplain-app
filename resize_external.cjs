@@ -17,7 +17,24 @@ async function resizeImages() {
         console.log(`Resizing ${file}...`);
         try {
             const image = await Jimp.read(filePath);
-            await image.resize(targetWidth, targetHeight).writeAsync(outPath);
+            await image.resize(targetWidth, targetHeight);
+            
+            // Mask status bar (top 100px)
+            const maskColor = 0xFFFFFFFF; // White
+            for (let x = 0; x < targetWidth; x++) {
+                for (let y = 0; y < 100; y++) {
+                    image.setPixelColor(maskColor, x, y);
+                }
+            }
+
+            // Mask bottom bar (bottom 100px)
+            for (let x = 0; x < targetWidth; x++) {
+                for (let y = targetHeight - 100; y < targetHeight; y++) {
+                    image.setPixelColor(maskColor, x, y);
+                }
+            }
+
+            await image.writeAsync(outPath);
 
             // Delete original and rename to keep the same name
             fs.unlinkSync(filePath);

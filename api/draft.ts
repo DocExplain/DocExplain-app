@@ -15,6 +15,15 @@ const CORS_HEADERS = {
 };
 
 
+const AI_TIMEOUT_MS = 15000;
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, modelName: string): Promise<T> {
+    const timeoutPromise = new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout: ${modelName} took more than ${timeoutMs}ms`)), timeoutMs)
+    );
+    return Promise.race([promise, timeoutPromise]);
+}
+
 export default async function handler(req: Request) {
     if (req.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -211,7 +220,7 @@ Return a JSON object with:
         const isChina = country === 'China' || country === 'CN';
         if (isChina && deepseekKey) {
             console.log("Routing draft request to DeepSeek for China storefront compliance.");
-            result = await callDeepSeek(context);
+            result = await withTimeout(callDeepSeek(context), AI_TIMEOUT_MS, "deepseek-draft");
             finalModel = "deepseek-chat";
             
             if (result) {
@@ -230,31 +239,31 @@ Return a JSON object with:
         // Execution
         try {
             if (primaryModel === "gemini" && geminiKey) {
-                result = await callGemini(context);
+                result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gemini-draft-primary");
                 finalModel = "gemini-2.0-flash";
             } else if (openaiKey) {
-                result = await callOpenAI(context);
+                result = await withTimeout(callOpenAI(context), AI_TIMEOUT_MS, "openai-draft-primary");
                 finalModel = "gpt-4o-mini";
             } else if (geminiKey) {
-                result = await callGemini(context);
+                result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gemini-draft-primary");
                 finalModel = "gemini-2.0-flash";
             }
         } catch (e: any) {
-            console.error(`Primary draft model (${primaryModel}) failed:`, e);
+            console.error(`Primary draft model (${primaryModel}) failed or timed out:`, e);
             errors.push(e.message);
         }
 
         if (!result) {
             try {
                 if (secondaryModel === "gemini" && geminiKey) {
-                    result = await callGemini(context);
+                    result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gemini-draft-fallback");
                     finalModel = "gemini-2.0-flash (fallback)";
                 } else if (openaiKey) {
-                    result = await callOpenAI(context);
+                    result = await withTimeout(callOpenAI(context), AI_TIMEOUT_MS, "openai-draft-fallback");
                     finalModel = "gpt-4o-mini (fallback)";
                 }
             } catch (e: any) {
-                console.error(`Secondary draft model (${secondaryModel}) failed:`, e);
+                console.error(`Secondary draft model (${secondaryModel}) failed or timed out:`, e);
                 errors.push(e.message);
             }
         }

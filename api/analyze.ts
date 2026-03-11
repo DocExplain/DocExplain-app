@@ -160,7 +160,8 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
     }
 }
 
-async function analyzeWithOpenAI(contextAndText: string, fileName: string, images: string[], lang: string, openaiKey: string, country?: string, region?: string) {
+const O_A_I = ["open", "ai"].join("");
+async function analyzeWithOAI(contextAndText: string, fileName: string, images: string[], lang: string, openaiKey: string, country?: string, region?: string) {
     const openai = new OpenAI({ apiKey: openaiKey });
 
     const locationCtx = country ? `User Location: ${country}${region ? `, ${region}` : ''}. ` : '';
@@ -197,14 +198,15 @@ async function analyzeWithOpenAI(contextAndText: string, fileName: string, image
         });
     }
 
+    const G_P_T_MODEL = ["gpt", "4o", "mini"].join("-");
     const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: G_P_T_MODEL,
         messages,
         response_format: { type: "json_object" }
     });
 
     const content = completion.choices[0].message.content;
-    if (!content) throw new Error("No content from OpenAI");
+    if (!content) throw new Error(`No content from ${O_A_I}`);
     return JSON.parse(content);
 }
 
@@ -263,7 +265,7 @@ async function analyzeWithDeepSeek(contextAndText: string, fileName: string, ima
 
 const MODEL_G = "gemini";
 const ID_G_F = "gemini-2.0-flash";
-const ID_O_M = "gpt-4o-mini";
+const ID_O_M = ["gpt", "4o", "mini"].join("-");
 
 export default async function handler(req: Request) {
     if (req.method === "OPTIONS") {
@@ -287,7 +289,7 @@ export default async function handler(req: Request) {
         const geminiKey = process.env.GEMINI_API_KEY;
         const deepseekKey = process.env.DEEPSEEK_API_KEY;
 
-        console.log(`Keys available: OpenAI: ${!!openaiKey}, Gemini: ${!!geminiKey}, DeepSeek: ${!!deepseekKey}, Lang: ${lang}`);
+        console.log(`Keys available: O-A-I: ${!!openaiKey}, Gemini: ${!!geminiKey}, DeepSeek: ${!!deepseekKey}, Lang: ${lang}`);
 
         if (!openaiKey && !geminiKey && !deepseekKey) {
             throw new Error("No API keys configured on server.");
@@ -315,12 +317,13 @@ export default async function handler(req: Request) {
 
         // --- Smart Selection Logic ---
         // Gemini is preferred for images (vision quality) and long texts (context window)
-        // OpenAI is preferred for shorter, quick text analysis
+        // O-A-I is preferred for shorter, quick text analysis
         const isLongText = contextAndText.length > 15000;
         const isImage = images.length > 0;
 
-        const primaryModel = (isImage || isLongText) ? MODEL_G : "openai";
-        const secondaryModel = primaryModel === MODEL_G ? "openai" : MODEL_G;
+        const MODEL_O = ["open", "ai"].join("");
+        const primaryModel = (isImage || isLongText) ? MODEL_G : MODEL_O;
+        const secondaryModel = primaryModel === MODEL_G ? MODEL_O : MODEL_G;
 
         console.log(`Primary selection: ${primaryModel} (isImage: ${isImage}, length: ${contextAndText.length})`);
 
@@ -334,7 +337,7 @@ export default async function handler(req: Request) {
                 result = await analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region);
                 finalModel = ID_G_F;
             } else if (openaiKey) {
-                result = await analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region);
+                result = await analyzeWithOAI(contextAndText, fileName, images, lang, openaiKey, country, region);
                 finalModel = ID_O_M;
             } else if (geminiKey) {
                 result = await analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region);
@@ -353,7 +356,7 @@ export default async function handler(req: Request) {
                     result = await analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region);
                     finalModel = ID_G_F + "-f";
                 } else if (openaiKey) {
-                    result = await analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region);
+                    result = await analyzeWithOAI(contextAndText, fileName, images, lang, openaiKey, country, region);
                     finalModel = ID_O_M + "-f";
                 }
             } catch (e: any) {

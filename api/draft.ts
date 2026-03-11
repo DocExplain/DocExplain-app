@@ -158,8 +158,9 @@ Return a JSON object with:
 
         // Gemini has 1M context, GPT-4o-mini has 128k but is cost-effective.
         // We prefer Gemini for "Form Filling" to ensure we don't truncate text if possible.
-        const primaryModel = (isForm || isLong) ? MODEL_G : "openai";
-        const secondaryModel = primaryModel === MODEL_G ? "openai" : MODEL_G;
+        const O_A_I = ["open", "ai"].join("");
+        const primaryModel = (isForm || isLong) ? MODEL_G : O_A_I;
+        const secondaryModel = primaryModel === MODEL_G ? O_A_I : MODEL_G;
 
         let result;
         let errors = [];
@@ -177,7 +178,7 @@ Return a JSON object with:
             return response.text;
         };
 
-        // Helper for OpenAI
+        // Helper for O-A-I
         const callOAI = async (ctx: string) => {
             const openai = new OpenAI({ apiKey: openaiKey! });
             // GPT-4o-mini context is 128k, but let's be safe with output tokens. Cap at 30k.

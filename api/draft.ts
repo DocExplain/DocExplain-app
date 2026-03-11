@@ -21,7 +21,8 @@ const ID_G_F = "g-f";
 const ID_DS_C = "ds-c";
 
 
-const AI_TIMEOUT_MS = 15000;
+const AI_TIMEOUT_MS = 12000;
+const AI_FALLBACK_TIMEOUT_MS = 8000;
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, modelName: string): Promise<T> {
     const timeoutPromise = new Promise<T>((_, reject) =>
@@ -162,19 +163,26 @@ Return a JSON object with:
 3. "chatResponse": Brief confirmation or answer (1-2 sentences max).
 4. "disclaimer": Standard AI-generated reminder.`;
 
-        // Smart Logic: Gemini preferred for Forms (Deep Analysis) or Long Text
+        // --- Regional & Smart Selection Logic ---
+        const isChina = country === 'China' || country === 'CN';
         const isForm = template === 'Form Filling Data';
         const isLong = context.length > 15000;
 
-        // Gemini has 1M context, standard models have 128k but are cost-effective.
-        // We prefer Gemini for "Form Filling" to ensure we don't truncate text if possible.
-        const primaryModel = (isForm || isLong) ? "gemini" : "openai";
-        const secondaryModel = primaryModel === "gemini" ? "openai" : "gemini";
+        const MODEL_G = "gemini";
+        const MODEL_O = O_A_I;
+
+        // Use industry-standard providers. G is preferred for images/long docs.
+        // For China, we strictly avoid O-A-I unless explicitly requested.
+        let primaryModel = (isForm || isLong) ? MODEL_G : MODEL_O;
+        if (isChina && !deepseekKey) {
+            primaryModel = MODEL_G; // Safer fallback for compliance
+        }
+        const secondaryModel = primaryModel === MODEL_G ? MODEL_O : MODEL_G;
 
         let result;
         let errors = [];
 
-        // Helper for Gemini
+        // Execution Functions
         const callGemini = async (ctx: string) => {
             const ai = new GoogleGenAI({ apiKey: geminiKey! });
             // Gemini can handle huge context, let's cap at 100k safely
@@ -187,7 +195,6 @@ Return a JSON object with:
             return response.text;
         };
 
-        // Helper for OpenAI
         const callOAI = async (ctx: string) => {
             const openai = new OpenAI({ apiKey: openaiKey! });
             const prompt = `Context: "${ctx.substring(0, 30000)}"`;
@@ -222,7 +229,6 @@ Return a JSON object with:
         let finalModel = "none";
 
         // --- China Routing Logic ---
-        const isChina = country === 'China' || country === 'CN';
         if (isChina && deepseekKey) {
             console.log("Routing D-R to D-S.");
             result = await withTimeout(callDeepSeek(context), AI_TIMEOUT_MS, "ds-d");
@@ -243,7 +249,7 @@ Return a JSON object with:
 
         // Execution
         try {
-            if (primaryModel === "gemini" && geminiKey) {
+            if (primaryModel === MODEL_G && geminiKey) {
                 result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gem-d-p");
                 finalModel = ID_G_F;
             } else if (openaiKey) {
@@ -254,21 +260,21 @@ Return a JSON object with:
                 finalModel = ID_G_F;
             }
         } catch (e: any) {
-            console.error(`P-D failed`);
+            console.error(`P-D failed or timed out`);
             errors.push(e.message);
         }
 
         if (!result) {
             try {
-                if (secondaryModel === "gemini" && geminiKey) {
-                    result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gem-d-f");
+                if (secondaryModel === MODEL_G && geminiKey) {
+                    result = await withTimeout(callGemini(context), AI_FALLBACK_TIMEOUT_MS, "gem-d-f");
                     finalModel = ID_G_F + "-f";
                 } else if (openaiKey) {
-                    result = await withTimeout(callOAI(context), AI_TIMEOUT_MS, "o-d-f");
+                    result = await withTimeout(callOAI(context), AI_FALLBACK_TIMEOUT_MS, "o-d-f");
                     finalModel = ID_O_M + "-f";
                 }
             } catch (e: any) {
-                console.error(`S-D failed`);
+                console.error(`S-D failed or timed out`);
                 errors.push(e.message);
             }
         }

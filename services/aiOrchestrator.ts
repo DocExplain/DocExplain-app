@@ -1,19 +1,5 @@
-import { explainDocument as explainGemini, generateDraft as draftGemini } from './geminiService';
-import OpenAI from 'openai';
+// Client-side orchestrator for backend AI services.
 import { AnalysisResult } from '../types';
-
-// Threshold: 20,000 chars is roughly 5k tokens.
-// Modern models are great, but for massive docs, Gemini 1.5 Flash has a larger context window (1M tokens).
-const LENGTH_THRESHOLD = 20000;
-
-const getOpenAIClient = () => {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    if (!apiKey) {
-        console.warn("API Key missing, falling back to Gemini");
-        return null;
-    }
-    return new OpenAI({ apiKey, dangerouslyAllowBrowser: true }); // Client-side usage for demo
-};
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://doc-explain-app.vercel.app';
 

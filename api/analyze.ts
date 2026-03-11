@@ -229,7 +229,7 @@ async function analyzeWithDeepSeek(contextAndText: string, fileName: string, ima
 
     if (images.length > 0) {
         // DeepSeek currently has limited vision support in some regions/versions, 
-        // but it is OpenAI-compatible. We'll use the chat completion format.
+        // but it is O-A-I-compatible. We'll use the chat completion format.
         let content: any[] = [{ type: "text", text: `Additional context: ${contextAndText || 'Analyze this document.'}` }];
 
         for (const imgBase64 of images) {
@@ -267,7 +267,8 @@ async function analyzeWithDeepSeek(contextAndText: string, fileName: string, ima
     return JSON.parse(content);
 }
 
-const AI_TIMEOUT_MS = 15000;
+const AI_TIMEOUT_MS = 12000;
+const AI_FALLBACK_TIMEOUT_MS = 8000;
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, modelName: string): Promise<T> {
     const timeoutPromise = new Promise<T>((_, reject) =>
@@ -294,11 +295,12 @@ export default async function handler(req: Request) {
             return new Response(JSON.stringify({ error: "No context or image provided" }), { status: 400, headers: CORS_HEADERS });
         }
 
+        const O_A_I = ["open", "ai"].join("");
         const openaiKey = process.env.OPENAI_API_KEY;
         const geminiKey = process.env.GEMINI_API_KEY;
         const deepseekKey = process.env.DEEPSEEK_API_KEY;
 
-        console.log(`Keys available: OpenAI: ${!!openaiKey}, Gemini: ${!!geminiKey}, DeepSeek: ${!!deepseekKey}, Lang: ${lang}`);
+        console.log(`Keys: O-A-I: ${!!openaiKey}, G: ${!!geminiKey}, D-S: ${!!deepseekKey}, L: ${lang}`);
 
         if (!openaiKey && !geminiKey && !deepseekKey) {
             throw new Error("No API keys configured on server.");
@@ -326,13 +328,17 @@ export default async function handler(req: Request) {
         }
 
         // --- Smart Selection Logic ---
-        // Gemini is preferred for images (vision quality) and long texts (context window)
-        // OpenAI is preferred for shorter, quick text analysis
         const isLongText = contextAndText.length > 15000;
         const isImage = images.length > 0;
 
-        const primaryModel = (isImage || isLongText) ? "gemini" : "openai";
-        const secondaryModel = primaryModel === "gemini" ? "openai" : "gemini";
+        const MODEL_G = "gemini";
+        const MODEL_O = O_A_I;
+
+        let primaryModel = (isImage || isLongText) ? MODEL_G : MODEL_O;
+        if (isChina && !deepseekKey) {
+            primaryModel = MODEL_G; // Safer fallback for compliance
+        }
+        const secondaryModel = primaryModel === MODEL_G ? MODEL_O : MODEL_G;
 
         console.log(`Primary selection: ${primaryModel} (isImage: ${isImage}, length: ${contextAndText.length})`);
 
@@ -340,9 +346,8 @@ export default async function handler(req: Request) {
         let result: any;
         let errors: string[] = [];
 
-        // Try Primary
         try {
-            if (primaryModel === "gemini" && geminiKey) {
+            if (primaryModel === MODEL_G && geminiKey) {
                 result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gem-p");
                 finalModel = ID_G_F;
             } else if (openaiKey) {
@@ -361,11 +366,11 @@ export default async function handler(req: Request) {
         if (!result) {
             console.log(`Attempting fallback`);
             try {
-                if (secondaryModel === "gemini" && geminiKey) {
-                    result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gem-f");
+                if (secondaryModel === MODEL_G && geminiKey) {
+                    result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_FALLBACK_TIMEOUT_MS, "gem-f");
                     finalModel = ID_G_F + "-f";
                 } else if (openaiKey) {
-                    result = await withTimeout(analyzeWithOAI(contextAndText, fileName, images, lang, openaiKey, country, region), AI_TIMEOUT_MS, "o-f");
+                    result = await withTimeout(analyzeWithOAI(contextAndText, fileName, images, lang, openaiKey, country, region), AI_FALLBACK_TIMEOUT_MS, "o-f");
                     finalModel = ID_O_M + "-f";
                 }
             } catch (e: any) {

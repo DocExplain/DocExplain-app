@@ -261,14 +261,9 @@ async function analyzeWithDeepSeek(contextAndText: string, fileName: string, ima
     return JSON.parse(content);
 }
 
-const AI_TIMEOUT_MS = 15000;
-
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, modelName: string): Promise<T> {
-    const timeoutPromise = new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout: ${modelName} took more than ${timeoutMs}ms`)), timeoutMs)
-    );
-    return Promise.race([promise, timeoutPromise]);
-}
+const MODEL_G = "gemini";
+const ID_G_F = "gemini-2.0-flash";
+const ID_O_M = "gpt-4o-mini";
 
 export default async function handler(req: Request) {
     if (req.method === "OPTIONS") {
@@ -312,7 +307,7 @@ export default async function handler(req: Request) {
             }), {
                 headers: {
                     ...CORS_HEADERS,
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json; charset=utf-8',
                     'X-Model-Used': "deepseek-chat"
                 }
             });
@@ -324,8 +319,8 @@ export default async function handler(req: Request) {
         const isLongText = contextAndText.length > 15000;
         const isImage = images.length > 0;
 
-        const primaryModel = (isImage || isLongText) ? "gemini" : "openai";
-        const secondaryModel = primaryModel === "gemini" ? "openai" : "gemini";
+        const primaryModel = (isImage || isLongText) ? MODEL_G : "openai";
+        const secondaryModel = primaryModel === MODEL_G ? "openai" : MODEL_G;
 
         console.log(`Primary selection: ${primaryModel} (isImage: ${isImage}, length: ${contextAndText.length})`);
 
@@ -335,34 +330,34 @@ export default async function handler(req: Request) {
 
         // Try Primary
         try {
-            if (primaryModel === "gemini" && geminiKey) {
-                result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gemini-primary");
-                finalModel = "gemini-2.0-flash";
+            if (primaryModel === MODEL_G && geminiKey) {
+                result = await analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region);
+                finalModel = ID_G_F;
             } else if (openaiKey) {
-                result = await withTimeout(analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region), AI_TIMEOUT_MS, "openai-primary");
-                finalModel = "gpt-4o-mini";
+                result = await analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region);
+                finalModel = ID_O_M;
             } else if (geminiKey) {
-                result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gemini-primary");
-                finalModel = "gemini-2.0-flash";
+                result = await analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region);
+                finalModel = ID_G_F;
             }
         } catch (e: any) {
-            console.error(`Primary model (${primaryModel}) failed or timed out:`, e.message);
+            console.error(`P-M failed:`, e.message);
             errors.push(e.message);
         }
 
         // Try Secondary if Primary failed
         if (!result) {
-            console.log(`Attempting fallback to secondary model: ${secondaryModel}`);
+            console.log(`Attempting fallback`);
             try {
-                if (secondaryModel === "gemini" && geminiKey) {
-                    result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gemini-fallback");
-                    finalModel = "gemini-2.0-flash (fallback)";
+                if (secondaryModel === MODEL_G && geminiKey) {
+                    result = await analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region);
+                    finalModel = ID_G_F + "-f";
                 } else if (openaiKey) {
-                    result = await withTimeout(analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region), AI_TIMEOUT_MS, "openai-fallback");
-                    finalModel = "gpt-4o-mini (fallback)";
+                    result = await analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region);
+                    finalModel = ID_O_M + "-f";
                 }
             } catch (e: any) {
-                console.error(`Secondary model (${secondaryModel}) failed or timed out:`, e.message);
+                console.error(`S-M failed:`, e.message);
                 errors.push(e.message);
             }
         }
@@ -392,7 +387,7 @@ export default async function handler(req: Request) {
             details: err.stack
         }), {
             status: 500,
-            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json; charset=utf-8' }
         });
     }
 }

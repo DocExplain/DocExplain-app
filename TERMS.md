@@ -10,7 +10,7 @@ Documate is an AI-powered document analysis tool. It uses artificial intelligenc
 ## 2. Privacy & Data Handling (AI Services)
 Documate utilizes third-party artificial intelligence services to process and summarize your documents. By using the analysis features of the app, you explicitly consent to the following:
 - **Data Shared**: The text and images extracted from your documents (including via camera or file upload) are transmitted securely to our AI providers.
-- **Third-Party Providers**: We partner with industry-standard AI providers to provide the analysis.
+- **Third-Party Providers**: We partner with **Google (Gemini AI)** and **OpenAI** to provide the analysis.
 - **Data Usage**: Your data is used exclusively for the purpose of generating the requested document analysis. We do NOT store your document content, nor is it used by these third-party providers to train their public AI models, in accordance with their respective API privacy policies.
 
 ## 3. No Professional Advice

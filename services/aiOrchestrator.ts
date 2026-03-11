@@ -3,13 +3,13 @@ import OpenAI from 'openai';
 import { AnalysisResult } from '../types';
 
 // Threshold: 20,000 chars is roughly 5k tokens.
-// Modern models are great, but for massive docs, Gemini 1.5 Flash has a larger context window (1M tokens).
+// GPT-4o-mini is great, but for massive docs, Gemini 1.5 Flash has a larger context window (1M tokens).
 const LENGTH_THRESHOLD = 20000;
 
 const getOpenAIClient = () => {
     const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
     if (!apiKey) {
-        console.warn("API Key missing, falling back to Gemini");
+        console.warn("OpenAI API Key missing, falling back to Gemini");
         return null;
     }
     return new OpenAI({ apiKey, dangerouslyAllowBrowser: true }); // Client-side usage for demo
@@ -32,9 +32,9 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
         });
         clearTimeout(timeoutId);
 
-        const modelId = response.headers.get('X-Model-Id');
-        if (modelId) {
-            console.log(`[Orchestrator] Model ID: ${modelId}`);
+        const modelUsed = response.headers.get('X-Model-Used');
+        if (modelUsed) {
+            console.log(`[Orchestrator] Model used for analysis: ${modelUsed}`);
         }
 
         console.log(`[Orchestrator] Response status: ${response.status}`);
@@ -66,9 +66,9 @@ export const generateDraft = async (summary: string, tone: string, template: str
             signal: controller.signal
         });
 
-        const modelId = response.headers.get('X-Model-Id');
-        if (modelId) {
-            console.log(`[Orchestrator] Model ID: ${modelId}`);
+        const modelUsed = response.headers.get('X-Model-Used');
+        if (modelUsed) {
+            console.log(`[Orchestrator] Model used for draft: ${modelUsed}`);
         }
 
         clearTimeout(timeoutId);

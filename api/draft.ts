@@ -10,15 +10,9 @@ export const config = {
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-    "Access-Control-Allow-Headers": "Content-Type, X-Model-Id",
-    "Access-Control-Expose-Headers": "X-Model-Id",
+    "Access-Control-Allow-Headers": "Content-Type, X-Model-Used",
+    "Access-Control-Expose-Headers": "X-Model-Used",
 };
-
-const O_A_I = ["open", "ai"].join("");
-const G_P_T_MODEL = ["gpt", "4o", "mini"].join("-");
-const ID_O_M = "o-m";
-const ID_G_F = "g-f";
-const ID_DS_C = "ds-c";
 
 
 const AI_TIMEOUT_MS = 15000;
@@ -166,7 +160,7 @@ Return a JSON object with:
         const isForm = template === 'Form Filling Data';
         const isLong = context.length > 15000;
 
-        // Gemini has 1M context, standard models have 128k but are cost-effective.
+        // Gemini has 1M context, GPT-4o-mini has 128k but is cost-effective.
         // We prefer Gemini for "Form Filling" to ensure we don't truncate text if possible.
         const primaryModel = (isForm || isLong) ? "gemini" : "openai";
         const secondaryModel = primaryModel === "gemini" ? "openai" : "gemini";
@@ -188,11 +182,12 @@ Return a JSON object with:
         };
 
         // Helper for OpenAI
-        const callOAI = async (ctx: string) => {
+        const callOpenAI = async (ctx: string) => {
             const openai = new OpenAI({ apiKey: openaiKey! });
+            // GPT-4o-mini context is 128k, but let's be safe with output tokens. Cap at 30k.
             const prompt = `Context: "${ctx.substring(0, 30000)}"`;
             const completion = await openai.chat.completions.create({
-                model: G_P_T_MODEL,
+                model: "gpt-4o-mini",
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: prompt }
@@ -224,18 +219,18 @@ Return a JSON object with:
         // --- China Routing Logic ---
         const isChina = country === 'China' || country === 'CN';
         if (isChina && deepseekKey) {
-            console.log("Routing D-R to D-S.");
-            result = await withTimeout(callDeepSeek(context), AI_TIMEOUT_MS, "ds-d");
-            const modelId = ID_DS_C;
+            console.log("Routing draft request to DeepSeek for China storefront compliance.");
+            result = await withTimeout(callDeepSeek(context), AI_TIMEOUT_MS, "deepseek-draft");
+            finalModel = "deepseek-chat";
             
             if (result) {
                 const parsedResult = JSON.parse(result);
-                parsedResult.modelUsed = modelId;
+                parsedResult.modelUsed = finalModel;
                 return new Response(JSON.stringify(parsedResult), {
                     headers: {
                         ...CORS_HEADERS,
                         'Content-Type': 'application/json',
-                        'X-Model-Id': modelId
+                        'X-Model-Used': finalModel
                     }
                 });
             }
@@ -244,31 +239,31 @@ Return a JSON object with:
         // Execution
         try {
             if (primaryModel === "gemini" && geminiKey) {
-                result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gem-d-p");
-                finalModel = ID_G_F;
+                result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gemini-draft-primary");
+                finalModel = "gemini-2.0-flash";
             } else if (openaiKey) {
-                result = await withTimeout(callOAI(context), AI_TIMEOUT_MS, "o-d-p");
-                finalModel = ID_O_M;
+                result = await withTimeout(callOpenAI(context), AI_TIMEOUT_MS, "openai-draft-primary");
+                finalModel = "gpt-4o-mini";
             } else if (geminiKey) {
-                result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gem-d-p");
-                finalModel = ID_G_F;
+                result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gemini-draft-primary");
+                finalModel = "gemini-2.0-flash";
             }
         } catch (e: any) {
-            console.error(`P-D failed`);
+            console.error(`Primary draft model (${primaryModel}) failed or timed out:`, e);
             errors.push(e.message);
         }
 
         if (!result) {
             try {
                 if (secondaryModel === "gemini" && geminiKey) {
-                    result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gem-d-f");
-                    finalModel = ID_G_F + "-f";
+                    result = await withTimeout(callGemini(context), AI_TIMEOUT_MS, "gemini-draft-fallback");
+                    finalModel = "gemini-2.0-flash (fallback)";
                 } else if (openaiKey) {
-                    result = await withTimeout(callOAI(context), AI_TIMEOUT_MS, "o-d-f");
-                    finalModel = ID_O_M + "-f";
+                    result = await withTimeout(callOpenAI(context), AI_TIMEOUT_MS, "openai-draft-fallback");
+                    finalModel = "gpt-4o-mini (fallback)";
                 }
             } catch (e: any) {
-                console.error(`S-D failed`);
+                console.error(`Secondary draft model (${secondaryModel}) failed or timed out:`, e);
                 errors.push(e.message);
             }
         }
@@ -283,7 +278,7 @@ Return a JSON object with:
             headers: {
                 ...CORS_HEADERS,
                 'Content-Type': 'application/json',
-                'X-Model-Id': finalModel
+                'X-Model-Used': finalModel
             }
         });
 

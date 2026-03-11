@@ -5,7 +5,7 @@
 Your privacy is important to us. This policy explains how we handle your data at Documate (documate.work).
 
 ## 1. Information Collection
-- **Documents**: When you upload a document, it is processed by our AI partners (such as Google Gemini or other standard providers) to provide an explanation. We do not store these documents longer than necessary to provide the service.
+- **Documents**: When you upload a document, it is processed by our AI partners (such as Google Gemini or OpenAI) to provide an explanation. We do not store these documents longer than necessary to provide the service.
 - **Usage Data**: We may collect anonymous data about how the app is used to improve our services.
 - **Payments**: All payment information is handled securely by RevenueCat and the respective App Stores. We do not have access to your credit card details.
 

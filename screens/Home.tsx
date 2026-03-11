@@ -457,7 +457,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         {showDebug && (
           <div className="bg-black/90 p-3 rounded-lg mb-4 max-h-40 overflow-y-auto text-[10px] font-mono text-green-400 shadow-xl border border-gray-700 pointer-events-auto animate-fade-in relative">
             <div className="flex justify-between items-center border-b border-gray-700 pb-1 mb-1 sticky top-0 bg-black/90">
-              <span className="font-bold text-white">Console (v1.2.0-rc)</span>
+              <span className="font-bold text-white">Debug Logs (v1.1.2)</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => {

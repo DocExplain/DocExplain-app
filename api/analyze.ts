@@ -56,15 +56,9 @@ Return a JSON object with:
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-    "Access-Control-Allow-Headers": "Content-Type, X-Model-Id",
-    "Access-Control-Expose-Headers": "X-Model-Id",
+    "Access-Control-Allow-Headers": "Content-Type, X-Model-Used",
+    "Access-Control-Expose-Headers": "X-Model-Used",
 };
-
-const O_A_I = ["open", "ai"].join("");
-const G_P_T_MODEL = ["gpt", "4o", "mini"].join("-");
-const ID_O_M = "o-m";
-const ID_G_F = "g-f";
-const ID_DS_C = "ds-c";
 
 
 async function analyzeWithGemini(contextAndText: string, fileName: string, images: string[], lang: string, geminiKey: string, country?: string, region?: string) {
@@ -166,7 +160,7 @@ async function analyzeWithGemini(contextAndText: string, fileName: string, image
     }
 }
 
-async function analyzeWithOAI(contextAndText: string, fileName: string, images: string[], lang: string, openaiKey: string, country?: string, region?: string) {
+async function analyzeWithOpenAI(contextAndText: string, fileName: string, images: string[], lang: string, openaiKey: string, country?: string, region?: string) {
     const openai = new OpenAI({ apiKey: openaiKey });
 
     const locationCtx = country ? `User Location: ${country}${region ? `, ${region}` : ''}. ` : '';
@@ -204,13 +198,13 @@ async function analyzeWithOAI(contextAndText: string, fileName: string, images: 
     }
 
     const completion = await openai.chat.completions.create({
-        model: G_P_T_MODEL,
+        model: "gpt-4o-mini",
         messages,
         response_format: { type: "json_object" }
     });
 
     const content = completion.choices[0].message.content;
-    if (!content) throw new Error(`No content from ${O_A_I}`);
+    if (!content) throw new Error("No content from OpenAI");
     return JSON.parse(content);
 }
 
@@ -307,20 +301,19 @@ export default async function handler(req: Request) {
         // --- China Routing Logic ---
         const isChina = country === 'China' || country === 'CN';
         if (isChina && deepseekKey) {
-            console.log("Routing to D-S.");
+            console.log("Routing to DeepSeek for China storefront compliance.");
             const result = await analyzeWithDeepSeek(contextAndText, fileName, images, lang, deepseekKey, country, region);
-            const modelId = ID_DS_C;
             return new Response(JSON.stringify({
                 ...result,
                 fileName,
                 fullText: result.extractedText || contextAndText,
                 timestamp: new Date().toISOString(),
-                modelUsed: modelId
+                modelUsed: "deepseek-chat"
             }), {
                 headers: {
                     ...CORS_HEADERS,
                     'Content-Type': 'application/json',
-                    'X-Model-Id': modelId
+                    'X-Model-Used': "deepseek-chat"
                 }
             });
         }
@@ -343,33 +336,33 @@ export default async function handler(req: Request) {
         // Try Primary
         try {
             if (primaryModel === "gemini" && geminiKey) {
-                result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gem-p");
-                finalModel = ID_G_F;
+                result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gemini-primary");
+                finalModel = "gemini-2.0-flash";
             } else if (openaiKey) {
-                result = await withTimeout(analyzeWithOAI(contextAndText, fileName, images, lang, openaiKey, country, region), AI_TIMEOUT_MS, "o-p");
-                finalModel = ID_O_M;
+                result = await withTimeout(analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region), AI_TIMEOUT_MS, "openai-primary");
+                finalModel = "gpt-4o-mini";
             } else if (geminiKey) {
-                result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gem-p");
-                finalModel = ID_G_F;
+                result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gemini-primary");
+                finalModel = "gemini-2.0-flash";
             }
         } catch (e: any) {
-            console.error(`P-M failed or timed out`);
+            console.error(`Primary model (${primaryModel}) failed or timed out:`, e.message);
             errors.push(e.message);
         }
 
         // Try Secondary if Primary failed
         if (!result) {
-            console.log(`Attempting fallback`);
+            console.log(`Attempting fallback to secondary model: ${secondaryModel}`);
             try {
                 if (secondaryModel === "gemini" && geminiKey) {
-                    result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gem-f");
-                    finalModel = ID_G_F + "-f";
+                    result = await withTimeout(analyzeWithGemini(contextAndText, fileName, images, lang, geminiKey, country, region), AI_TIMEOUT_MS, "gemini-fallback");
+                    finalModel = "gemini-2.0-flash (fallback)";
                 } else if (openaiKey) {
-                    result = await withTimeout(analyzeWithOAI(contextAndText, fileName, images, lang, openaiKey, country, region), AI_TIMEOUT_MS, "o-f");
-                    finalModel = ID_O_M + "-f";
+                    result = await withTimeout(analyzeWithOpenAI(contextAndText, fileName, images, lang, openaiKey, country, region), AI_TIMEOUT_MS, "openai-fallback");
+                    finalModel = "gpt-4o-mini (fallback)";
                 }
             } catch (e: any) {
-                console.error(`S-M failed or timed out`);
+                console.error(`Secondary model (${secondaryModel}) failed or timed out:`, e.message);
                 errors.push(e.message);
             }
         }
@@ -388,7 +381,7 @@ export default async function handler(req: Request) {
             headers: {
                 ...CORS_HEADERS,
                 'Content-Type': 'application/json',
-                'X-Model-Id': finalModel
+                'X-Model-Used': finalModel
             }
         });
 

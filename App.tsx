@@ -19,7 +19,7 @@ import { LanguageProvider } from './i18n/LanguageContext';
 // ── AdMob Ad Unit IDs ──────────────────────────────────────────────────────
 // ⚠️  Replace these with your real Ad Unit IDs from AdMob Console before release.
 //     Use Google test IDs for now (they show real test ads, no policy risk).
-const ADMOB_APP_ID_IOS = 'ca-app-pub-3940256099942544~1458002511';          // Test App ID
+const ADMOB_APP_ID_IOS = 'ca-app-pub-9411950027978678~1872183233';          // Production App ID
 const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-3940256099942544/4411468910';    // Test Interstitial
 // const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-XXXXXXXX/YOUR_REAL_UNIT_ID'; // ← replace for production
 

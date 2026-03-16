@@ -17,11 +17,9 @@ import { AnalysisResult, Screen } from './types';
 import { LanguageProvider } from './i18n/LanguageContext';
 
 // ── AdMob Ad Unit IDs ──────────────────────────────────────────────────────
-// ⚠️  Replace these with your real Ad Unit IDs from AdMob Console before release.
-//     Use Google test IDs for now (they show real test ads, no policy risk).
-const ADMOB_APP_ID_IOS = 'ca-app-pub-9411950027978678~1872183233';          // Production App ID
-const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-3940256099942544/4411468910';    // Test Interstitial
-// const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-XXXXXXXX/YOUR_REAL_UNIT_ID'; // ← replace for production
+const ADMOB_APP_ID_IOS = 'ca-app-pub-9411950027978678~1872183233';
+const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-9411950027978678/4078925628';
+const ADMOB_INTERSTITIAL_ANDROID = 'ca-app-pub-3940256099942544/1033173712'; // Test ID - à remplacer par votre ID de production Android
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.HOME);
@@ -51,7 +49,7 @@ const App: React.FC = () => {
         if (Capacitor.getPlatform() === 'ios') {
           await Purchases.configure({ apiKey: 'appl_cubDksaszunSkjAHHVhrFejxttW' });
         } else if (Capacitor.getPlatform() === 'android') {
-          await Purchases.configure({ apiKey: 'test_aqrwUXptWgcKqadnjavnJwKLKHB' });
+          await Purchases.configure({ apiKey: 'goog_NQvsZOqdsESbfgIRGKSlfbPSiLq' });
         }
 
         // Enable debug logs temporarily to see why offerings are missing
@@ -97,7 +95,7 @@ const App: React.FC = () => {
   const preloadInterstitial = async () => {
     if (!Capacitor.isNativePlatform()) return;
     try {
-      const adId = Capacitor.getPlatform() === 'ios' ? ADMOB_INTERSTITIAL_IOS : ADMOB_INTERSTITIAL_IOS;
+      const adId = Capacitor.getPlatform() === 'ios' ? ADMOB_INTERSTITIAL_IOS : ADMOB_INTERSTITIAL_ANDROID;
       await AdMob.prepareInterstitial({ adId });
     } catch (e) {
       console.warn("AdMob preload failed:", e);

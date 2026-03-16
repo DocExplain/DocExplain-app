@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import { RevenueCatUI, PAYWALL_RESULT } from '@revenuecat/purchases-capacitor-ui';
-import { AdMob, InterstitialAdPluginEvents } from '@capacitor-community/admob';
+import { AdMob, InterstitialAdPluginEvents, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { useLanguage } from './i18n/LanguageContext';
 import { translations } from './i18n/translations';
 import { Navigation } from './components/Navigation';
@@ -19,7 +19,10 @@ import { LanguageProvider } from './i18n/LanguageContext';
 // ── AdMob Ad Unit IDs ──────────────────────────────────────────────────────
 const ADMOB_APP_ID_IOS = 'ca-app-pub-9411950027978678~1872183233';
 const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-9411950027978678/4078925628';
-const ADMOB_INTERSTITIAL_ANDROID = 'ca-app-pub-3940256099942544/1033173712'; // Test ID - à remplacer par votre ID de production Android
+const ADMOB_INTERSTITIAL_ANDROID = 'ca-app-pub-3940256099942544/1033173712'; 
+
+const ADMOB_REWARDED_IOS = 'ca-app-pub-9411950027978678/5602057569';
+const ADMOB_REWARDED_ANDROID = 'ca-app-pub-3940256099942544/5224354917'; // Test ID - à remplacer par votre ID de production Android
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.HOME);
@@ -83,8 +86,9 @@ const App: React.FC = () => {
       if (!Capacitor.isNativePlatform()) return;
       try {
         await AdMob.initialize({ testingDevices: [] });
-        // Pre-load first interstitial
+        // Pre-load ads
         preloadInterstitial();
+        preloadRewarded();
       } catch (e) {
         console.warn("AdMob init failed:", e);
       }
@@ -144,6 +148,57 @@ const App: React.FC = () => {
     setCurrentScreen(Screen.RESULT);
   };
 
+  const preloadRewarded = async () => {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      const adId = Capacitor.getPlatform() === 'ios' ? ADMOB_REWARDED_IOS : ADMOB_REWARDED_ANDROID;
+      await AdMob.prepareRewardVideoAd({ adId });
+    } catch (e) {
+      console.warn("AdMob Rewarded preload failed:", e);
+    }
+  };
+
+  const showRewardedAd = async (onReward: () => void) => {
+    if (!Capacitor.isNativePlatform()) {
+      onReward(); // Auto-reward on web/emulator for testing
+      return;
+    }
+
+    try {
+      const rewardListener = await AdMob.addListener(
+        RewardAdPluginEvents.Rewarded,
+        () => {
+          rewardListener.remove();
+          onReward();
+        }
+      );
+
+      const dismissListener = await AdMob.addListener(
+        RewardAdPluginEvents.Dismissed,
+        () => {
+          dismissListener.remove();
+          rewardListener.remove();
+          preloadRewarded(); // Reload for next time
+        }
+      );
+
+      const failListener = await AdMob.addListener(
+        RewardAdPluginEvents.FailedToLoad,
+        () => {
+          failListener.remove();
+          dismissListener.remove();
+          rewardListener.remove();
+          alert("Could not load video. Please try again later.");
+        }
+      );
+
+      await AdMob.showRewardVideoAd();
+    } catch (e) {
+      console.warn("AdMob Reward show failed:", e);
+      alert("Ad not available. Try again later.");
+    }
+  };
+
   const handleAnalysisComplete = (result: AnalysisResult) => {
     showInterstitialAndNavigate(result);
   };
@@ -190,6 +245,7 @@ const App: React.FC = () => {
             onAnalysisComplete={handleAnalysisComplete}
             onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)}
             setLoading={setLoading}
+            onShowRewarded={showRewardedAd}
             isPro={isPro}
           />
         );
@@ -203,7 +259,7 @@ const App: React.FC = () => {
               setCurrentScreen(Screen.SMART_TEMPLATES);
             }}
           />
-        ) : <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} isPro={isPro} />;
+        ) : <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} onShowRewarded={showRewardedAd} isPro={isPro} />;
       case Screen.SMART_TEMPLATES:
         return analysisResult ? (
           <SmartTemplates
@@ -241,7 +297,7 @@ const App: React.FC = () => {
           />
         );
       default:
-        return <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} isPro={isPro} />;
+        return <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} onShowRewarded={showRewardedAd} isPro={isPro} />;
     }
   };
 

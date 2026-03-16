@@ -10,6 +10,7 @@ interface HomeProps {
   onAnalysisComplete: (result: any) => void;
   onNavigate: (screen: Screen) => void;
   setLoading: (loading: boolean) => void;
+  onShowRewarded: (onReward: () => void) => void;
   isPro: boolean;
 }
 
@@ -23,7 +24,7 @@ const getCountryList = (t: any) => [
 const MAX_FREE_CHARS = 15000;
 const MAX_DAILY_FREE_DOCS = 3;
 
-export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setLoading, isPro }) => {
+export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setLoading, onShowRewarded, isPro }) => {
   const { t, lang, setLang } = useLanguage();
   const countries = getCountryList(t);
   const [country, setCountry] = useState(t.countryUS);
@@ -192,8 +193,9 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
   };
 
   const startRewardAd = () => {
-    setAdType('reward');
-    setShowAd(true);
+    onShowRewarded(() => {
+      handleAdReward();
+    });
   };
 
   const handleAnalyze = async () => {
@@ -378,13 +380,7 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
         </div>
       )}
 
-      <AdModal
-        isOpen={showAd}
-        type={adType}
-        onClose={handleAdClose}
-        onReward={handleAdReward}
-        onUpgrade={() => { setShowAd(false); onNavigate(Screen.PAYWALL); }}
-      />
+
 
       {/* AI Consent Modal */}
       {showConsentModal && (

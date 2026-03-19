@@ -1,14 +1,14 @@
 
 import { AnalysisResult } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://doc-explain-app.vercel.app';
+const API_URL = import.meta.env.VITE_API_URL || 'https://qsfcfqstvmmyqchlrkhk.supabase.co/functions/v1';
 
 export const explainDocument = async (contextAndText: string, fileName: string, imageBase64?: string): Promise<AnalysisResult> => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
   try {
-    const fullUrl = `${API_URL}/api/analyze`;
+    const fullUrl = `${API_URL}/analyze`;
     console.log(`[DEBUG] Calling API: ${fullUrl}`);
     console.log(`[DEBUG] Context length: ${contextAndText?.length || 0}`);
 
@@ -57,7 +57,7 @@ export const generateDraft = async (
   template: string
 ): Promise<string> => {
   try {
-    const response = await fetch(`${API_URL}/api/draft`, {
+    const response = await fetch(`${API_URL}/draft`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 
 async function testAPI() {
-    const url = 'https://documate.vercel.app/api/analyze';
+    const url = 'https://qsfcfqstvmmyqchlrkhk.supabase.co/functions/v1/analyze';
     const body = {
         contextAndText: "Test content to verify API is working.",
         fileName: "test.txt"

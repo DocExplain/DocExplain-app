@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AnalysisResult } from '../types';
 import { useLanguage, SUPPORTED_LANGS, SupportedLang } from '../i18n/LanguageContext';
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || 'https://doc-explain-app.vercel.app';
+const VITE_API_URL = import.meta.env.VITE_API_URL || 'https://qsfcfqstvmmyqchlrkhk.supabase.co/functions/v1';
 
 interface DraftProps {
   result: AnalysisResult;
@@ -28,7 +28,7 @@ export const Draft: React.FC<DraftProps> = ({ result, onBack }) => {
     setLoading(true);
     try {
       // Updated orchestrated call for dual response
-      const response = await fetch(`${VITE_API_URL}/api/draft`, {
+      const response = await fetch(`${VITE_API_URL}/draft`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

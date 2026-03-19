@@ -15,7 +15,7 @@ const getOpenAIClient = () => {
     return new OpenAI({ apiKey, dangerouslyAllowBrowser: true }); // Client-side usage for demo
 };
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://doc-explain-app.vercel.app';
+const API_URL = import.meta.env.VITE_API_URL || 'https://qsfcfqstvmmyqchlrkhk.supabase.co/functions/v1';
 
 export const explainDocument = async (contextAndText: string, fileName: string, lang: string, imagesBase64?: string[], country?: string, region?: string): Promise<AnalysisResult> => {
     console.log(`[Orchestrator] Starting analysis. Context len: ${contextAndText.length}, Images count: ${imagesBase64?.length}, Country: ${country || 'N/A'}, Region: ${region || 'N/A'}`);
@@ -23,8 +23,8 @@ export const explainDocument = async (contextAndText: string, fileName: string, 
     const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
     try {
-        console.log(`[Orchestrator] Fetching ${API_URL}/api/analyze...`);
-        const response = await fetch(`${API_URL}/api/analyze`, {
+        console.log(`[Orchestrator] Fetching ${API_URL}/analyze...`);
+        const response = await fetch(`${API_URL}/analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contextAndText, fileName, imagesBase64, lang, country, region }),
@@ -59,7 +59,7 @@ export const generateDraft = async (summary: string, tone: string, template: str
     const timeoutId = setTimeout(() => controller.abort(), 120000);
 
     try {
-        const response = await fetch(`${API_URL}/api/draft`, {
+        const response = await fetch(`${API_URL}/draft`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ context: summary, tone, template, lang, currentDraft, country, region }),

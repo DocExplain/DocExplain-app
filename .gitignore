@@ -28,3 +28,8 @@ temp_repo_web/
 CM_CERTIFICATE.txt
 CM_PROVISIONING_PROFILE.txt
 documate-web-repo/
+
+# Android Keystores
+*.jks
+*.keystore
+android/keystore.properties

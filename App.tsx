@@ -18,11 +18,10 @@ import { LanguageProvider } from './i18n/LanguageContext';
 
 // ── AdMob Ad Unit IDs ──────────────────────────────────────────────────────
 const ADMOB_APP_ID_IOS = 'ca-app-pub-9411950027978678~1872183233';
-const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-9411950027978678/4078925628';
-const ADMOB_INTERSTITIAL_ANDROID = 'ca-app-pub-9411950027978678/2546688811'; 
-
-const ADMOB_REWARDED_IOS = 'ca-app-pub-9411950027978678/5602057569';
-const ADMOB_REWARDED_ANDROID = 'ca-app-pub-9411950027978678/2303146231';
+const ADMOB_INTERSTITIAL_ANDROID = 'ca-app-pub-8878347479089931/3357752777';
+const ADMOB_REWARDED_ANDROID = 'ca-app-pub-8878347479089931/3337838379';
+const ADMOB_INTERSTITIAL_IOS = 'ca-app-pub-8878347479089931/2679095924';
+const ADMOB_REWARDED_IOS = 'ca-app-pub-8878347479089931/8941518846';
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.HOME);

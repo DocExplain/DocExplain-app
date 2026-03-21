@@ -57,7 +57,7 @@
 	<false/>
 	<!-- AdMob: Replace with your real App ID from AdMob Console before release -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-9411950027978678~1872183233</string>
+	<string>ca-app-pub-8878347479089931~7684277493</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

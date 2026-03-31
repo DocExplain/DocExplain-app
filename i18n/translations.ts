@@ -61,6 +61,8 @@ export interface TranslationStrings {
     analysisResult: string; documentUnclear: string; keyDatesLabel: string;
     localContext: string; lexicon: string; analyzingDocument: string;
     privateSecure: string; noActionNeeded: string;
+    // Ad during analysis
+    adDuringAnalysis: string;
     // AI Consent
     aiConsentTitle: string; aiConsentText: string; aiConsentAgree: string; aiConsentDecline: string;
 }
@@ -119,6 +121,7 @@ const en: TranslationStrings = {
     lexicon: "Glossary", analyzingDocument: "Analyzing your document…",
     privateSecure: "Private & Secure: We do not store your data. All documents are processed securely and discarded immediately.",
     noActionNeeded: "No action needed",
+    adDuringAnalysis: "A short ad is shown while we analyze your document.",
     aiConsentTitle: "Data Privacy Consent", aiConsentText: "To provide explanations, your document content and questions are sent securely to our third-party AI provider (OpenAI). Data is not used for training and is discarded immediately.", aiConsentAgree: "I Agree", aiConsentDecline: "Cancel",
 };
 
@@ -176,6 +179,7 @@ const fr: TranslationStrings = {
     lexicon: "Lexique", analyzingDocument: "Analyse de votre document en cours…",
     privateSecure: "Privé et sécurisé : Nous ne stockons pas vos données. Tous les documents sont traités de manière sécurisée et supprimés immédiatement.",
     noActionNeeded: "Aucune action nécessaire",
+    adDuringAnalysis: "Une courte publicité s'affiche pendant l'analyse de votre document.",
     aiConsentTitle: "Confidentialité des données", aiConsentText: "Pour vous fournir des explications, le contenu de votre document et vos questions sont envoyés de manière sécurisée à notre fournisseur d'IA (OpenAI). Vos données ne sont pas utilisées pour l'entraînement et sont supprimées immédiatement.", aiConsentAgree: "J'accepte", aiConsentDecline: "Annuler",
 };
 
@@ -233,6 +237,7 @@ const de: TranslationStrings = {
     lexicon: "Glossar", analyzingDocument: "Ihr Dokument wird analysiert…",
     privateSecure: "Privat & Sicher: Wir speichern Ihre Daten nicht. Alle Dokumente werden sicher verarbeitet und sofort gelöscht.",
     noActionNeeded: "Keine Aktion erforderlich",
+    adDuringAnalysis: "Während Ihr Dokument analysiert wird, zeigen wir eine kurze Anzeige.",
     aiConsentTitle: "Datenschutz-Einwilligung", aiConsentText: "Ihre Dokumente und Fragen werden sicher zur Analyse an unseren KI-Anbieter (OpenAI) gesendet. Die Daten werden nicht für das Training verwendet und sofort gelöscht.", aiConsentAgree: "Ich stimme zu", aiConsentDecline: "Abbrechen",
 };
 
@@ -290,6 +295,7 @@ const es: TranslationStrings = {
     lexicon: "Glosario", analyzingDocument: "Analizando su documento…",
     privateSecure: "Privado y seguro: No almacenamos sus datos.",
     noActionNeeded: "No se requiere acción",
+    adDuringAnalysis: "Se muestra un anuncio breve mientras analizamos su documento.",
     aiConsentTitle: "Consentimiento de Privacidad", aiConsentText: "Para proporcionar explicaciones, el contenido del documento y sus preguntas se envían de forma segura a nuestro proveedor de IA (OpenAI). Los datos no se utilizan para entrenamiento y se eliminan inmediatamente.", aiConsentAgree: "Acepto", aiConsentDecline: "Cancelar",
 };
 
@@ -347,6 +353,7 @@ const it: TranslationStrings = {
     lexicon: "Glossario", analyzingDocument: "Analisi del documento in corso…",
     privateSecure: "Privato e sicuro: Non memorizziamo i tuoi dati.",
     noActionNeeded: "Nessuna azione necessaria",
+    adDuringAnalysis: "Un breve annuncio viene mostrato durante l'analisi del documento.",
     aiConsentTitle: "Consenso sulla privacy", aiConsentText: "I tuoi documenti e le tue domande vengono inviati in modo sicuro al nostro provider IA (OpenAI) per l'analisi. I dati non vengono utilizzati per l'addestramento e vengono eliminati immediatamente.", aiConsentAgree: "Accetto", aiConsentDecline: "Annulla",
 };
 
@@ -404,6 +411,7 @@ const pt: TranslationStrings = {
     lexicon: "Glossário", analyzingDocument: "Analisando seu documento…",
     privateSecure: "Privado e seguro: Não armazenamos seus dados.",
     noActionNeeded: "Nenhuma ação necessária",
+    adDuringAnalysis: "Um anúncio breve é exibido enquanto analisamos seu documento.",
     aiConsentTitle: "Consentimento de Privacidade", aiConsentText: "Para fornecer explicações, o conteúdo do seu documento e suas perguntas são enviados com segurança ao provedor de IA (OpenAI). Os dados não são usados para treinamento e são descartados imediatamente.", aiConsentAgree: "Eu concordo", aiConsentDecline: "Cancelar",
 };
 
@@ -461,6 +469,7 @@ const zh: TranslationStrings = {
     lexicon: "术语表", analyzingDocument: "正在分析您的文档…",
     privateSecure: "私密且安全：我们不会存储您的数据。",
     noActionNeeded: "无需操作",
+    adDuringAnalysis: "分析您的文档时，会显示一则短广告。",
     aiConsentTitle: "数据隐私同意", aiConsentText: "为了提供解释，您的文档内容和问题将安全地发送给第三方人工智能提供商。数据不用于训练，并在分析后立即丢弃。", aiConsentAgree: "我同意", aiConsentDecline: "取消",
 };
 
@@ -518,6 +527,7 @@ const hi: TranslationStrings = {
     lexicon: "शब्दकोश", analyzingDocument: "आपका दस्तावेज़ विश्लेषित किया जा रहा है…",
     privateSecure: "निजी और सुरक्षित: हम आपका डेटा संग्रहीत नहीं करते।",
     noActionNeeded: "कोई कार्रवाई आवश्यक नहीं",
+    adDuringAnalysis: "आपका दस्तावेज़ विश्लेषित होने के दौरान एक संक्षिप्त विज्ञापन दिखाया जा रहा है।",
     aiConsentTitle: "डेटा गोपनीयता सहमति", aiConsentText: "स्पष्टीकरण के लिए, आपके दस्तावेज़ और प्रश्न सुरक्षित रूप से  एआई (OpenAI) को भेजे जाते हैं। डेटा का उपयोग प्रशिक्षण के लिए नहीं किया जाता है और हटा दिया जाता है।", aiConsentAgree: "मैं सहमत हूँ", aiConsentDecline: "रद्द करें",
 };
 
@@ -575,6 +585,7 @@ const ar: TranslationStrings = {
     lexicon: "مسرد المصطلحات", analyzingDocument: "جاري تحليل مستندك…",
     privateSecure: "خاص وآمن: لا نخزن بياناتك.",
     noActionNeeded: "لا يلزم اتخاذ أي إجراء",
+    adDuringAnalysis: "يتم عرض إعلان قصير أثناء تحليل مستندك.",
     aiConsentTitle: "الموافقة على خصوصية البيانات", aiConsentText: "لتقديم تفسيرات، يتم إرسال محتوى المستند الخاص بك وأسئلتك بأمان إلى مزود الذكاء الاصطناعي (OpenAI). لا يتم استخدام البيانات للتدريب ويتم التخلص منها على الفور.", aiConsentAgree: "أوافق", aiConsentDecline: "إلغاء",
 };
 
@@ -632,6 +643,7 @@ const ru: TranslationStrings = {
     lexicon: "Глоссарий", analyzingDocument: "Анализируем ваш документ…",
     privateSecure: "Конфиденциально и безопасно: мы не храним ваши данные.",
     noActionNeeded: "Действия не требуются",
+    adDuringAnalysis: "Пока ваш документ анализируется, показывается короткая реклама.",
     aiConsentTitle: "Согласие на обработку данных", aiConsentText: "Для объяснений содержимое документа и вопросы отправляются ИИ-провайдеру (OpenAI). Данные не используются для обучения и немедленно удаляются.", aiConsentAgree: "Я согласен(на)", aiConsentDecline: "Отмена",
 };
 
@@ -689,6 +701,7 @@ const bn: TranslationStrings = {
     lexicon: "শব্দকোষ", analyzingDocument: "আপনার নথি বিশ্লেষণ হচ্ছে…",
     privateSecure: "ব্যক্তিগত ও নিরাপদ: আমরা আপনার তথ্য সংরক্ষণ করি না।",
     noActionNeeded: "কোনো কার্যকরী প্রয়োজন নেই",
+    adDuringAnalysis: "আপনার নথি বিশ্লেষণ হওয়ার সময় একটি সংক্ষিপ্ত বিজ্ঞাপন দেখানো হচ্ছে।",
     aiConsentTitle: "ডেটা গোপনীয়তা সম্মতি", aiConsentText: "বিশ্লেষণ প্রদানের জন্য, আপনার নথির বিষয়বস্তু নিরাপদে আমাদের এআই (OpenAI) এর কাছে পাঠানো হয়। এটি প্রশিক্ষণের জন্য ব্যবহার করা হয় না এবং মুছে ফেলা হয়।", aiConsentAgree: "আমি একমত", aiConsentDecline: "বাতিল করুন",
 };
 

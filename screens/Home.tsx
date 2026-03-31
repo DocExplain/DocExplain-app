@@ -8,6 +8,7 @@ import { AdModal } from '../components/AdModal';
 import { PreviewModal } from '../components/PreviewModal';
 interface HomeProps {
   onAnalysisComplete: (result: any) => void;
+  onStartAnalysis?: () => void;
   onNavigate: (screen: Screen) => void;
   setLoading: (loading: boolean) => void;
   onShowRewarded: (onReward: () => void) => void;
@@ -24,7 +25,7 @@ const getCountryList = (t: any) => [
 const MAX_FREE_CHARS = 15000;
 const MAX_DAILY_FREE_DOCS = 3;
 
-export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setLoading, onShowRewarded, isPro }) => {
+export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onStartAnalysis, onNavigate, setLoading, onShowRewarded, isPro }) => {
   const { t, lang, setLang } = useLanguage();
   const countries = getCountryList(t);
   const [country, setCountry] = useState(t.countryUS);
@@ -209,6 +210,11 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
 
     setLoading(true);
     setIsAnalyzing(true);
+
+    // Trigger ad at analysis start (non-blocking)
+    if (onStartAnalysis && !isPro) {
+      onStartAnalysis();
+    }
 
     let textToAnalyze = "";
     let docName = "Context Analysis";
@@ -675,13 +681,18 @@ export const Home: React.FC<HomeProps> = ({ onAnalysisComplete, onNavigate, setL
 
           {/* Loading Indicator - visible under analyze button during analysis */}
           {isAnalyzing && (
-            <div className="flex items-center justify-center gap-3 py-4 animate-fade-in">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+            <div className="flex flex-col items-center justify-center gap-3 py-4 animate-fade-in">
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{t.analyzingDocument}</p>
               </div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{t.analyzingDocument}</p>
+              {!isPro && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center px-4">{t.adDuringAnalysis}</p>
+              )}
             </div>
           )}
 

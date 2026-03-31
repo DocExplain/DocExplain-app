@@ -38,6 +38,7 @@ const App: React.FC = () => {
   const [isPurchasesReady, setIsPurchasesReady] = useState(false);
   // Track pending result while ad is showing
   const pendingResultRef = useRef<AnalysisResult | null>(null);
+  const isAdShowingRef = useRef(false);
 
   // ── RevenueCat Init ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -105,46 +106,54 @@ const App: React.FC = () => {
     }
   };
 
-  const showInterstitialAndNavigate = async (result: AnalysisResult) => {
-    if (!Capacitor.isNativePlatform() || isPro) {
-      // No ad for Pro users or web
-      navigateToResult(result);
-      return;
-    }
+  // ── Ad during analysis (show ad while AI works) ────────────────────────
+  const startAdDuringAnalysis = async () => {
+    if (!Capacitor.isNativePlatform() || isPro) return;
 
     try {
-      // Listen for ad dismissal to then navigate
+      isAdShowingRef.current = true;
+
       const listener = await AdMob.addListener(
         InterstitialAdPluginEvents.Dismissed,
         () => {
           listener.remove();
-          navigateToResult(result);
-          // Pre-load next ad
+          isAdShowingRef.current = false;
+          // If analysis already finished while ad was showing, navigate now
+          if (pendingResultRef.current) {
+            const result = pendingResultRef.current;
+            pendingResultRef.current = null;
+            navigateToResult(result);
+          }
           preloadInterstitial();
         }
       );
 
-      // Also handle ad failure gracefully
       const failListener = await AdMob.addListener(
         InterstitialAdPluginEvents.FailedToLoad,
         () => {
           failListener.remove();
           listener.remove();
-          navigateToResult(result);
+          isAdShowingRef.current = false;
+          // If analysis already finished, navigate now
+          if (pendingResultRef.current) {
+            const result = pendingResultRef.current;
+            pendingResultRef.current = null;
+            navigateToResult(result);
+          }
         }
       );
 
       await AdMob.showInterstitial();
     } catch (e) {
-      console.warn("AdMob show failed, navigating directly:", e);
-      navigateToResult(result);
+      console.warn("AdMob show failed during analysis:", e);
+      isAdShowingRef.current = false;
+      // If analysis already finished, navigate now
+      if (pendingResultRef.current) {
+        const result = pendingResultRef.current;
+        pendingResultRef.current = null;
+        navigateToResult(result);
+      }
     }
-  };
-
-  const navigateToResult = (result: AnalysisResult) => {
-    setAnalysisResult(result);
-    setHistory((prev) => [result, ...prev]);
-    setCurrentScreen(Screen.RESULT);
   };
 
   const preloadRewarded = async () => {
@@ -198,8 +207,19 @@ const App: React.FC = () => {
     }
   };
 
+  const navigateToResult = (result: AnalysisResult) => {
+    setAnalysisResult(result);
+    setHistory((prev) => [result, ...prev]);
+    setCurrentScreen(Screen.RESULT);
+  };
+
   const handleAnalysisComplete = (result: AnalysisResult) => {
-    showInterstitialAndNavigate(result);
+    // If ad is still showing, store result for later
+    if (isAdShowingRef.current) {
+      pendingResultRef.current = result;
+    } else {
+      navigateToResult(result);
+    }
   };
 
   // ── Paywall ─────────────────────────────────────────────────────────────
@@ -242,6 +262,7 @@ const App: React.FC = () => {
         return (
           <Home
             onAnalysisComplete={handleAnalysisComplete}
+            onStartAnalysis={startAdDuringAnalysis}
             onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)}
             setLoading={setLoading}
             onShowRewarded={showRewardedAd}
@@ -258,7 +279,7 @@ const App: React.FC = () => {
               setCurrentScreen(Screen.SMART_TEMPLATES);
             }}
           />
-        ) : <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} onShowRewarded={showRewardedAd} isPro={isPro} />;
+        ) : <Home onAnalysisComplete={handleAnalysisComplete} onStartAnalysis={startAdDuringAnalysis} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} onShowRewarded={showRewardedAd} isPro={isPro} />;
       case Screen.SMART_TEMPLATES:
         return analysisResult ? (
           <SmartTemplates
@@ -296,7 +317,7 @@ const App: React.FC = () => {
           />
         );
       default:
-        return <Home onAnalysisComplete={handleAnalysisComplete} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} onShowRewarded={showRewardedAd} isPro={isPro} />;
+        return <Home onAnalysisComplete={handleAnalysisComplete} onStartAnalysis={startAdDuringAnalysis} onNavigate={(screen) => screen === Screen.PAYWALL ? handleOpenPaywall() : setCurrentScreen(screen)} setLoading={setLoading} onShowRewarded={showRewardedAd} isPro={isPro} />;
     }
   };
 
